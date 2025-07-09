@@ -13,7 +13,6 @@ sns.set_style("whitegrid")
 
 # --- Step 2: Parameter Configuration ---
 # Specify the path to the SAM/BAM file for analysis.
-# args.alignment_file = "/groups/cress/projects/efactors/ryuichi/is110/20250707/PV7SNC_3_dIS110-conj1-pool/aligned_contigs.sam"
 
 parser = argparse.ArgumentParser(
     description="Script to plot insertion map results against a reference genome"
@@ -33,6 +32,14 @@ parser.add_argument(
 parser.add_argument(
     "-x", "--target_coordinate", required=False, type=int,
     help="Target coordinate for integrations in bp"
+)
+parser.add_argument(
+    "-w", "--zoom_window_size", required=False, type=int, default=100,
+    help="If target coordinate provided: window size for additional zoomed in plot around target coordinate"
+)
+parser.add_argument(
+    "--on_target_threshold", required=False, type=int, default=10,
+    help="If target coordinate provided: how many bp away from target site on either side to still consider as on target"
 )
 
 args = parser.parse_args()
@@ -259,7 +266,8 @@ plt.savefig(os.path.join(args.out_dir, "alignment_plot.png"), dpi=300)
 # # site AND save a pie chart of on target % (on target is defined as give or take 
 # # 1bp from target site)
 if args.target_coordinate:
-    w = 50
+    # PLOT A ZOOMED IN VERSION OF THE INSERTION MAP
+    w = args.zoom_window_size / 2
     xmin, xmax = args.target_coordinate - w, args.target_coordinate + w
 
     plt.figure(figsize=(16, 6))
@@ -285,27 +293,35 @@ if args.target_coordinate:
                 color='blue',                 # color: text color.
                 fontsize=9                    # fontsize: text size.
             )
-
-    # if args.target_coordinate:
-    #     # args.target_coordinate = args.target_coordinate / 1_000_000
-
     # Set labels and title.
     plt.title(args.title, fontsize=16)
     plt.xlabel("Position in Genome (b)", fontsize=12)
     # The y-axis label is corrected to reflect the linear scale of the data being plotted.
     plt.ylabel("Insertion Counts", fontsize=12)
     plt.ylim(bottom=0)
-
-
-
-
     tri = add_triangle(args.target_coordinate)
-    # if total_genome_length > 0:
-    #     total_genome_length_mb = total_genome_length / 1_000_000
-    #     plt.xlim(left=0, right=total_genome_length_mb)
-    # else:
-    #     plt.xlim(left=0)
-
     plt.tight_layout()
     plt.savefig(os.path.join(args.out_dir, "alignment_plot_zoomed.png"), dpi=300)
+
+    # PLOT A PIE CHART SHOWING % OF ON TARGET INTEGRATIONS
+    def on_target_mapper(pos):
+        if (pos >= (args.target_coordinate - args.on_target_threshold)) and (pos <= args.target_coordinate + args.on_target_threshold ):
+            return True
+        else:
+            return False
+
+    counts_df["on_target"] = counts_df["position"].map(on_target_mapper)
+    counts = counts_df.groupby('on_target')['count'].sum()
+    # Plot pie chart
+    plt.figure(figsize=(6, 6))
+    counts.plot.pie(
+        autopct='%1.1f%%',
+        startangle=90,
+        labels=['Off Target', 'On Target'],  # Map False to Off, True to On
+        colors=['lightcoral', 'lightgreen'],
+        # wedgeprops={'edgecolor': 'black'}
+    )
+    plt.ylabel("")
+    plt.savefig(os.path.join(args.out_dir, "on_target_pie_chart.png"), dpi=300)
+
 # plt.show()
