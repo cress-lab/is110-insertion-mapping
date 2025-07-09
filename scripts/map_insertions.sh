@@ -70,6 +70,10 @@ python scripts/RE_blast_contig_fetch.py \
   -t "$wk_dir/blast/RE_blast.tsv" \
   -o "$wk_dir/RE_contain_contigs.fasta"
 
-# minimap2 -t 48 -ax map-ont "$genome_file" "$wk_dir/RE_contain_contigs.fasta" | samtools view -bS -o "$wk_dir/aligned_contigs.bam"
+echo "Mapping RE onto reference genome"
 minimap2 -t 48 -ax map-ont "$genome_file" "$wk_dir/RE_contain_contigs.fasta" | samtools view -bS | samtools sort -o "$wk_dir/aligned_contigs.bam" - && samtools index "$wk_dir/aligned_contigs.bam"
 
+# Map the raw reads onto the genome, then compute coverage
+echo "Mapping raw fastq reads onto reference genome"
+minimap2 -t 48 -ax map-ont "$genome_file" "$fastq_path" | samtools view -bS | samtools sort -o "$wk_dir/raw_reads_aligned.bam" - && samtools index "$wk_dir/raw_reads_aligned.bam"
+samtools depth -o "$wk_dir/raw_reads_coverage.tsv" "$wk_dir/raw_reads_aligned.bam"
