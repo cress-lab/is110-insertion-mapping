@@ -2,8 +2,10 @@ import pysam
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import seaborn as sns
 import argparse
+import os
 from collections import Counter
 
 # Set a professional style for the plots.
@@ -21,15 +23,74 @@ parser.add_argument(
     help="Path to the read alignment file"
 )
 parser.add_argument(
-    "-o", "--output", required=True,
-    help="Path to write the output plot"
+    "-o", "--out_dir", required=True,
+    help="Directory to write the output plots to"
 )
 parser.add_argument(
     "-t", "--title", required=False,
     help="Title for plot"
 )
+parser.add_argument(
+    "-x", "--target_coordinate", required=False, type=int,
+    help="Target coordinate for integrations in bp"
+)
 
 args = parser.parse_args()
+
+def add_triangle(x, size_frac=0.01):
+    """
+    Add an upward-pointing triangle below the x-axis at data coordinate x,
+    with width = height, both relative to axes size.
+
+    Parameters:
+    - x: data coordinate on x-axis where triangle is centered.
+    - size_frac: fraction of axes width (and height) for the triangle size.
+    """
+    ax = plt.gca()
+    fig = plt.gcf()
+
+    # Get data limits
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+
+    axes_width_data = xlim[1] - xlim[0]
+    axes_height_data = ylim[1] - ylim[0]
+
+    # Get axes bounding box in pixels
+    bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    axes_width_inch = bbox.width
+    axes_height_inch = bbox.height
+
+    # Calculate scale factors: data units per inch
+    x_scale = axes_width_data / axes_width_inch
+    y_scale = axes_height_data / axes_height_inch
+
+    # size_frac of axes width in data units (x direction)
+    width = axes_width_data * size_frac
+
+    # To get equal width and height visually, height in data units is width * (y_scale / x_scale)
+    height = width * (y_scale / x_scale)
+
+    # Define transform: x in data coords, y in axis coords (0 is bottom of axes)
+    transform = ax.get_xaxis_transform()
+
+    # Convert height to axis coords:
+    # Since y in transform is axis coords (0 to 1), convert height from data to axis coords:
+    height_axis = height / axes_height_data  # height in axis fraction
+
+    triangle = patches.Polygon(
+        [[x - width / 2, -height_axis],
+         [x + width / 2, -height_axis],
+         [x, 0]],
+        transform=transform,
+        clip_on=False,
+        color='red',
+        alpha=1
+    )
+    ax.add_patch(triangle)
+    plt.subplots_adjust(bottom=0.2)
+
+    return triangle
 
 # Set default title if not provided
 if not args.title:
@@ -147,6 +208,38 @@ for index, row in labels_df.iterrows():
         fontsize=9                    # fontsize: text size.
     )
 
+# Add a red triangle below the target site if target_coordinate argument provided
+if args.target_coordinate:
+    # args.target_coordinate = args.target_coordinate / 1_000_000
+    # tri = add_triangle(args.target_coordinate / 1_000_000)
+    target_coordinate = args.target_coordinate / 1_000_000
+    # Define x-position for the triangle
+    triangle_height = 0.02  # in axis coordinates (relative to axes height)
+    triangle_width = triangle_height * 1.8
+
+    # Get current axes
+    ax = plt.gca()
+
+    # Define triangle in axis coordinates (y=0 is bottom of axes)
+    transform = ax.get_xaxis_transform()  # Transforms x in data, y in axes coordinates
+
+    # Create triangle below the x-axis
+    triangle = patches.Polygon(
+        [[target_coordinate - triangle_width / 2, -triangle_height],
+        [target_coordinate + triangle_width / 2, -triangle_height],
+        [target_coordinate, 0]],  # pointing up toward axis
+        transform=transform,
+        clip_on=False,  # Draw outside plot area
+        color='red', alpha=1
+    )
+
+    # Add triangle
+    ax.add_patch(triangle)
+
+    # Optional: make room below axis
+    plt.subplots_adjust(bottom=0.2)
+
+
 # Set labels and title.
 plt.title(args.title, fontsize=16)
 plt.xlabel("Position in Genome (Mb)", fontsize=12)
@@ -161,5 +254,58 @@ else:
     plt.xlim(left=0)
 
 plt.tight_layout()
-plt.savefig(args.output, dpi=300)
-plt.show()
+plt.savefig(os.path.join(args.out_dir, "alignment_plot.png"), dpi=300)
+# # If target coordinate provided: save an additional zoomed in plot around that 
+# # site AND save a pie chart of on target % (on target is defined as give or take 
+# # 1bp from target site)
+if args.target_coordinate:
+    w = 50
+    xmin, xmax = args.target_coordinate - w, args.target_coordinate + w
+
+    plt.figure(figsize=(16, 6))
+    plt.xlim(xmin, xmax)
+
+    # Create the stem plot using raw counts (linear scale).
+    markerline, stemlines, baseline = plt.stem(
+        counts_df['position'],
+        counts_df['count'],
+        linefmt='grey', markerfmt='o', basefmt=' '
+    )
+    plt.setp(markerline, 'markersize', 3, 'color', 'royalblue')
+
+    # --- Labeling Process ---
+    # Loop through the filtered DataFrame to add labels.
+    for index, row in labels_df.iterrows():
+        if (row["position"] >= xmin) & (row["position"] <= xmax):
+            # Use plt.text() to add text to the plot.
+            plt.text(
+                x=row['position'] + 0.01,  # x-coordinate: slightly offset to the right.
+                y=row['count'],               # y-coordinate: same height as the marker.
+                s=f"{int(row['position'])}, {int(row['count'])}times", # s: the string to display.
+                color='blue',                 # color: text color.
+                fontsize=9                    # fontsize: text size.
+            )
+
+    # if args.target_coordinate:
+    #     # args.target_coordinate = args.target_coordinate / 1_000_000
+
+    # Set labels and title.
+    plt.title(args.title, fontsize=16)
+    plt.xlabel("Position in Genome (b)", fontsize=12)
+    # The y-axis label is corrected to reflect the linear scale of the data being plotted.
+    plt.ylabel("Insertion Counts", fontsize=12)
+    plt.ylim(bottom=0)
+
+
+
+
+    tri = add_triangle(args.target_coordinate)
+    # if total_genome_length > 0:
+    #     total_genome_length_mb = total_genome_length / 1_000_000
+    #     plt.xlim(left=0, right=total_genome_length_mb)
+    # else:
+    #     plt.xlim(left=0)
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(args.out_dir, "alignment_plot_zoomed.png"), dpi=300)
+# plt.show()
