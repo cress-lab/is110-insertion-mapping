@@ -3,6 +3,7 @@ import argparse
 import os
 from Bio import SeqIO
 from Bio.Seq import Seq
+import pandas as pd
 
 def main():
     """
@@ -24,6 +25,10 @@ def main():
         "-o", "--output", required=True,
         help="Path to write the output FASTA (containing the downstream regions)"
     )
+    parser.add_argument(
+        "-s", "--max_read_size", default=200, type=int,
+        help="Maximum size to extract for downstream regions"
+    )
     args = parser.parse_args()
 
     # Ensure the output directory exists
@@ -38,59 +43,111 @@ def main():
     except Exception as e:
         print(f"Error: Could not index FASTA file. Please ensure it is a valid FASTA. Details: {e}")
         return
-
+    # Read BLAST hits
     print(f"Processing hits from {args.hits} and extracting downstream regions...")
-    with open(args.hits) as hits_file, open(args.output, "w") as out_f:
-        for line_num, line in enumerate(hits_file, 1):
-            if not line.strip():
-                continue
+    hits = pd.read_csv(args.hits, sep="\t", header=None)
+    hits.columns = ['sseqid', 'sstart', 'send', 'sstrand']
+    # Filter out reads with multiple RE hits
+    read_re_cts = hits['sseqid'].value_counts()
+    reads_to_keep = read_re_cts[read_re_cts == 1].keys()
+    hits = hits[hits["sseqid"].isin(reads_to_keep)]
+    extracted_seqs = []
+
+    for idx, hit in hits.iterrows():
+        # Get the full contig length
+        contig_len = len(seq_dict[hit["sseqid"]])
+        subseq = ""
+        # Below makes the assumption that sstart < send; this is not the case 
+        # for - strand hits
+        boundaries = [hit["sstart"], hit["send"]]
+        sstart = min(boundaries)
+        send = max(boundaries)
+
+        # --- LOGIC CHANGE START ---
+        # Calculate coordinates to get the sequence to the end of the contig.
+
+        if hit["sstrand"].lower() == "plus":
+            # On the plus strand, "downstream" is from the hit's end to the contig's end.
+            start_pos = send # - 1 + 1 (convert to 0-based, then add 1 so the extracted seq starts outside of the hit)
+            end_pos = min(start_pos + args.max_read_size, contig_len)
             
-            try:
-                id, sstart, send, strand = line.strip().split("\t")
-                sstart, send = int(sstart), int(send)
-            except ValueError:
-                print(f"Warning: Skipping malformed line {line_num} in hits file: {line.strip()}")
-                continue
+            # Extract sequence only if the hit is not at the very end of the contig
+            if start_pos <= contig_len:
+                subseq = seq_dict[hit["sseqid"]].seq[start_pos: end_pos]
 
-            # Check if the contig ID from the hits file exists in the FASTA file
-            if id not in seq_dict:
-                print(f"Warning: Contig ID '{id}' on line {line_num} not found in FASTA file. Skipping.")
-                continue
+        else:  # minus strand
+            # On the minus strand, "downstream" (towards 3' end) is from the hit's start 
+            # towards the beginning of the contig's coordinate system.
+            # start_pos = 1
+            end_pos = sstart - 1 # Convert to 0-based; this is the actual index of the start pos of the hit BUT won't be included because of exclusive end for slicing
+            start_pos = max(end_pos - args.max_read_size, 0)
 
-            # Get the full contig length
-            contig_len = len(seq_dict[id])
-            subseq = ""
+            # Extract sequence only if the hit is not at the very beginning of the contig
+            if end_pos >= 1:
+                raw_seq = seq_dict[hit["sseqid"]].seq[start_pos: end_pos]
+                subseq = raw_seq.reverse_complement()
+        
+        if subseq:
+            # Create a more descriptive header for each unique extraction
+            header = f'hit:{hit["sstart"]}-{send}|strand:{hit["sstrand"]}|downstream_region'
+            # out_f.write(f"{header}\n{str(subseq)}\n")
+            record = SeqIO.SeqRecord(id=hit["sseqid"], description=header, seq=subseq)
+            extracted_seqs.append(record)
 
-            # --- LOGIC CHANGE START ---
-            # Calculate coordinates to get the sequence to the end of the contig.
+    with open(args.output, "w") as output_handle:
+        SeqIO.write(extracted_seqs, output_handle, "fasta")
+    # print(f"Processing hits from {args.hits} and extracting downstream regions...")
+    # with open(args.hits) as hits_file, open(args.output, "w") as out_f:
+    #     for line_num, line in enumerate(hits_file, 1):
+    #         if not line.strip():
+    #             continue
+            
+    #         try:
+    #             id, sstart, send, strand = line.strip().split("\t")
+    #             sstart, send = int(sstart), int(send)
+    #         except ValueError:
+    #             print(f"Warning: Skipping malformed line {line_num} in hits file: {line.strip()}")
+    #             continue
 
-            if strand.lower() == "plus":
-                # On the plus strand, "downstream" is from the hit's end to the contig's end.
-                start_pos = send + 1
-                end_pos = contig_len
+    #         # Check if the contig ID from the hits file exists in the FASTA file
+    #         if id not in seq_dict:
+    #             print(f"Warning: Contig ID '{id}' on line {line_num} not found in FASTA file. Skipping.")
+    #             continue
+
+    #         # Get the full contig length
+    #         contig_len = len(seq_dict[id])
+    #         subseq = ""
+
+    #         # --- LOGIC CHANGE START ---
+    #         # Calculate coordinates to get the sequence to the end of the contig.
+
+    #         if strand.lower() == "plus":
+    #             # On the plus strand, "downstream" is from the hit's end to the contig's end.
+    #             start_pos = send + 1
+    #             end_pos = contig_len
                 
-                # Extract sequence only if the hit is not at the very end of the contig
-                if start_pos <= contig_len:
-                    subseq = seq_dict[id].seq[start_pos - 1 : end_pos]
+    #             # Extract sequence only if the hit is not at the very end of the contig
+    #             if start_pos <= contig_len:
+    #                 subseq = seq_dict[id].seq[start_pos - 1 : end_pos]
 
-            else:  # minus strand
-                # On the minus strand, "downstream" (towards 3' end) is from the hit's start 
-                # towards the beginning of the contig's coordinate system.
-                start_pos = 1
-                end_pos = sstart - 1
+    #         else:  # minus strand
+    #             # On the minus strand, "downstream" (towards 3' end) is from the hit's start 
+    #             # towards the beginning of the contig's coordinate system.
+    #             start_pos = 1
+    #             end_pos = sstart - 1
 
-                # Extract sequence only if the hit is not at the very beginning of the contig
-                if end_pos >= 1:
-                    raw_seq = seq_dict[id].seq[start_pos - 1 : end_pos]
-                    subseq = raw_seq.reverse_complement()
+    #             # Extract sequence only if the hit is not at the very beginning of the contig
+    #             if end_pos >= 1:
+    #                 raw_seq = seq_dict[id].seq[start_pos - 1 : end_pos]
+    #                 subseq = raw_seq.reverse_complement()
             
-            # --- LOGIC CHANGE END ---
+    #         # --- LOGIC CHANGE END ---
 
-            # Write the sequence to the output file, but only if it's not empty.
-            if subseq:
-                # Create a more descriptive header for each unique extraction
-                header = f">{id}|hit:{sstart}-{send}|strand:{strand}|downstream_region"
-                out_f.write(f"{header}\n{str(subseq)}\n")
+    #         # Write the sequence to the output file, but only if it's not empty.
+    #         if subseq:
+    #             # Create a more descriptive header for each unique extraction
+    #             header = f">{id}|hit:{sstart}-{send}|strand:{strand}|downstream_region"
+    #             out_f.write(f"{header}\n{str(subseq)}\n")
 
     print("\nProcess complete.")
     print(f"All available downstream sequences have been written to: {args.output}")
