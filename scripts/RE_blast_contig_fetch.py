@@ -26,7 +26,7 @@ def main():
         help="Path to write the output FASTA (containing the downstream regions)"
     )
     parser.add_argument(
-        "-s", "--max_read_size", default=200, type=int,
+        "-s", "--max_read_size", type=int, required=False,
         help="Maximum size to extract for downstream regions"
     )
     args = parser.parse_args()
@@ -69,7 +69,10 @@ def main():
         if hit["sstrand"].lower() == "plus":
             # On the plus strand, "downstream" is from the hit's end to the contig's end.
             start_pos = send # - 1 + 1 (convert to 0-based, then add 1 so the extracted seq starts outside of the hit)
-            end_pos = min(start_pos + args.max_read_size, contig_len)
+            if args.max_read_size is not None:
+                end_pos = min(start_pos + args.max_read_size, contig_len)
+            else:
+                end_pos = contig_len
             
             # Extract sequence only if the hit is not at the very end of the contig
             if start_pos <= contig_len:
@@ -80,7 +83,10 @@ def main():
             # towards the beginning of the contig's coordinate system.
             # start_pos = 1
             end_pos = sstart - 1 # Convert to 0-based; this is the actual index of the start pos of the hit BUT won't be included because of exclusive end for slicing
-            start_pos = max(end_pos - args.max_read_size, 0)
+            if args.max_read_size is not None:
+                start_pos = max(end_pos - args.max_read_size, 0)
+            else:
+                start_pos = 0
 
             # Extract sequence only if the hit is not at the very beginning of the contig
             if end_pos >= 1:
