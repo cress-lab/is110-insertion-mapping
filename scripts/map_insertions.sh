@@ -68,6 +68,7 @@ blastn \
 python scripts/RE_blast_contig_fetch.py \
   -f "$wk_dir/blast/$sequencing_basename.fasta" \
   -t "$wk_dir/blast/RE_blast.tsv" \
+  -s 200 \
   -o "$wk_dir/RE_contain_contigs.fasta"
 
 echo "Mapping RE onto reference genome"
