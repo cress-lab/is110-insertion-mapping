@@ -57,7 +57,7 @@ blastn \
 -db "$wk_dir/blast/$sequencing_basename" \
 -task blastn-short \
 -query "$re_seq" \
--perc_identity 100 -qcov_hsp_perc 100 \
+-perc_identity 90 -qcov_hsp_perc 90 \
 -outfmt "6 sseqid sstart send sstrand" \
 -word_size 4 \
 -soft_masking false \
