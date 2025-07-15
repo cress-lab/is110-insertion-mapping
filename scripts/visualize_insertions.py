@@ -139,7 +139,7 @@ def main():
         "secondary": 0,
         "supplementary": 0,
     })
-    insertion_sites = []
+    insertion_sites, reference_names = [], []
     total_genome_length = 0
 
     # Open the SAM/BAM file once to process reads and get header info.
@@ -170,6 +170,7 @@ def main():
             # For reads that pass the filters, get the 5' end position.
             pos = read.reference_end - 1 if read.is_reverse else read.reference_start
             insertion_sites.append(pos)
+            reference_names.append(read.reference_name)
 
     # Report the filtering statistics.
     total_reads = sum(filter_counts.values()) + len(insertion_sites)
@@ -182,28 +183,18 @@ def main():
     # --- Step 4: Data Aggregation and Formatting ---
     print("\nStep 4: Aggregating data...")
 
-    # Convert the list of insertion sites into a Pandas Series.
-    sites_series = pd.Series(insertion_sites, name="position")
+    positions_df = pd.DataFrame([insertion_sites, reference_names], index=['position', 'reference']).T
 
-    #Convert to 1-based indexing.
-    sites_series += 1
-
-    # Count the occurrences of each position and sort by position.
-    position_counts = sites_series.value_counts().sort_index()
-
-    # (Optional) Print the counts for each insertion site.
-    # for pos, count in position_counts.items():
-    #     print(f"  - Insertion site at {pos}: {count} times")
+    # Convert to 1-based indexing
+    positions_df["position"] += 1
 
     # Convert the results into a DataFrame for plotting.
-    counts_df = position_counts.reset_index()
-    counts_df.columns = ['position', 'count']
+    counts_df = pd.DataFrame(positions_df.groupby("reference")["position"].value_counts()).reset_index()
 
     # Add a column for plotting in Megabases (Mb).
     counts_df['position_mb'] = counts_df['position'] / 1_000_000
     # NOTE: The log10_count column is calculated but not used in the plot, so it's removed for clarity.
     print("  - Data aggregation complete.")
-
 
     # --- Step 5: Visualization (Labeling Peaks) ---
     print("\nStep 5: Creating genome-wide plot...")
