@@ -6,46 +6,136 @@ from Bio import SeqIO
 from Bio.Seq import Seq, reverse_complement
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation
-from find_brna import find_target_donor_sites
+# from find_brna import find_target_donor_sites
+import find_brna
 import genbank_utils
 import copy
+
+# class bRNAReaction():
+#     def __init__(self, brna_path, other_plasmid_paths, out_dir):
+#         self.brna_path = brna_path
+#         self.other_plasmid_paths = other_plasmid_paths
+#         self.out_dir = out_dir
+#         self._process_brna()
+#         self._read_dna_files()
+#         pass
+
+#     def _process_brna(self):
+#         brna_plasmid_record = SeqIO.read(self.brna_path, "genbank")
+#         target, donor = find_brna.find_target_donor_sites(brna_plasmid_record)
+#         self.target_site, self.lt, self.target_core, self.rt = target
+#         self.donor_site, self.ld, self.donor_core, self.rd = donor
+
+#         print(f"Using:\tTarget site: {target_site}\n\tDonor site: {donor_site}")
+
+#     def _read_dna_files(self):
+#         self.other_plasmid_records = [
+#             SeqIO.read(file, "genbank") for file in self.other_plasmid_paths
+#             ]
 
 
 def determine_mode(*args):
     return "insertion"
 
 
-def find_matches(site, contig, complement_search=True, return_strand=True):
-    """
-    Find matches for site in contig. If none found, look for it in the reverse 
-    complement of the contig instead if complement_search=True.
-    """
-    strand = 1
-    matches_in_contig = [match for match in re.finditer(site, contig)]
-    if (len(matches_in_contig) > 1):
-        raise ValueError("Found multiple sites in contig!")
-    elif (len(matches_in_contig) == 0):
-        if complement_search:
-            print("\tsearching for site in reverse complement...", end=" ")
-            contig = reverse_complement(contig)
-            matches_in_contig = [match for match in re.finditer(site, contig)]
-            if (len(matches_in_contig) > 1):
-                raise ValueError("Found multiple sites in contig!")
-            elif (len(matches_in_contig) == 0):
-                raise ValueError("Found 0 sites in contig!")
-            else:
-                strand = -1
-                print("found!")
-        else:
-            raise ValueError("Found 0 sites in contig!")
+def count_sites(site, sequence):
+    matches_pos_strand = [match for match in re.finditer(site, sequence)]
+    matches_neg_strand = [match for match in re.finditer(
+                            site, reverse_complement(sequence))]
+    pos_strand_hits = len(matches_pos_strand)
+    neg_strand_hits = len(matches_neg_strand)
+    return (pos_strand_hits, neg_strand_hits)
 
-    site_start, site_end = matches_in_contig[0].start(), matches_in_contig[0].end()
-    # contig[site_start:site_end] == site
-    # NOTE: safe to index like [site_end:] or [:site_start] to extract contig 
-    if return_strand:
+
+def determine_excision_or_inversion():
+    # If target and donor are on the same plasmid, figure out if it's gonna be 
+    # an excision or inversion
+    pass
+
+
+def annotate_plasmid_as_target_or_donor_or_both(record, target_site, donor_site):
+    target_cts = sum(count_sites(record, target_site))
+    donor_cts = sum(count_sites(record, donor_site))
+
+    unique_donor = donor_cts == 1
+    unique_target = target_cts == 1
+    is_donor, is_target = False, False
+    if unique_donor:
+        is_donor = True
+    elif donor_cts > 1:
+        raise ValueError(f"Multiple donor sites found in {record.id}!")
+    if unique_target:
+        is_target = True
+    elif target_cts > 1:
+        raise ValueError(f"Multiple target sites found in {record.id}!")
+    return is_donor, is_target
+
+    # both = False
+
+    # if both:
+    #     determine_relative_orientation()
+
+
+def identify_plasmids(
+        brna_plasmid_record, other_plasmids, target_site, donor_site):
+    plasmids = [brna_plasmid_record] + other_plasmids
+    identities = [
+        annotate_plasmid_as_target_or_donor_or_both(i, target_site, donor_site)
+        for i in plasmids
+    ]
+    donor_cts = [i[0] for i in identities]
+    target_cts = [i[1] for i in identities]
+
+    one_donor_site = donor_cts.count(True) == 1
+    one_target_site = target_cts.count(True) == 1
+
+    if one_donor_site and one_target_site:
+        donor_idx = np.where(donor_cts)[0].item()
+        target_idx = np.where(target_cts)[0].item()
+        if donor_idx == target_idx:
+            target_plasmid = plasmids[target_idx]
+            mode = determine_excision_or_inversion(target_plasmid)
+            return mode, (target_plasmid)
+        else:
+            target_plasmid = plasmids[target_idx]
+            donor_plasmid = plasmids[donor_idx]
+            mode = "insertion"
+            return mode, (target_plasmid, donor_plasmid)
+
+    # brna_donor_hits = sum(count_sites(brna_plasmid_record, donor_site))
+    # brna_target_hits = sum(count_sites(brna_plasmid_record, target_site))
+
+
+def find_matches(site, contig):
+    """
+    Find matches for site in contig. 
+    """
+    # Find matches on positive and negative strands
+    matches_pos_strand = [match for match in re.finditer(site, contig)]
+    rc_contig = reverse_complement(contig)
+    matches_neg_strand = [match for match in re.finditer(site, rc_contig)]
+    matches = matches_pos_strand + matches_neg_strand
+    match_strands = np.concatenate([
+        np.ones_like(matches_pos_strand), np.ones_like(matches_neg_strand) * -1
+        ])
+    match_locations = []
+    for idx, match in enumerate(matches):
+        site_start, site_end = match.start(), match.end()
+        strand = match_strands[idx]
+        match_locations.append((strand, site_start, site_end))
+    return match_locations
+
+
+def find_unique_match(site, contig):
+    match_locations = find_matches(site, contig)
+    n_matches = len(match_locations)
+    if n_matches == 1:
+        strand, site_start, site_end = match_locations[0]
         return strand, site_start, site_end
+    elif n_matches == 0:
+        raise ValueError("Found 0 sites in contig!")
     else:
-        return site_start, site_end
+        raise ValueError("Found multiple sites in contig!")
 
 
 def find_partial_site(part, site, contig_pos):
@@ -57,13 +147,15 @@ def find_partial_site(part, site, contig_pos):
         site (str): Full sequence of target or donor site
         contig_pos (str): Start index of site in contig
     """    
-    part_start, part_end = find_matches(part, site, complement_search=False, 
-                                        return_strand=False)
+    part_start = site.index(part)
+    part_end = part_start + len(part)
+    # part_start, part_end = find_matches(part, site, complement_search=False, 
+    #                                     return_strand=False)
     part_start, part_end = contig_pos + part_start, contig_pos + part_end
     return part_start, part_end
 
 
-def annotate_site(record, site_start, site_seq, le_seq, core, re_seq, mode="Target", inplace=False):
+def annotate_site(record, site_start, site_seq, le_seq, re_seq, mode="Target", inplace=False):
     allowed_modes = ["Target", "Donor"]
     assert mode in allowed_modes, f"mode must be one of: {allowed_modes}"
 
@@ -159,10 +251,10 @@ def calculate_insertion(donor_record, target_record, donor_split_pos, target_spl
     # Transfer features
     features = []
     for feature in donor_record.features:
-        if "Donor Core" in feature.qualifiers.get("label", ""):
-            print(feature.qualifiers.get("label", ""))
-            print("Original: ", feature)
-            print("Shifted: ", shift_feature(feature, target_split_pos))
+        # if "Donor Core" in feature.qualifiers.get("label", ""):
+        #     print(feature.qualifiers.get("label", ""))
+        #     print("Original: ", feature)
+        #     print("Shifted: ", shift_feature(feature, target_split_pos))
         shifted_feature = shift_feature(feature, target_split_pos)
         features.append(shifted_feature)
         # feature.location.start = feature.location.start + target_split_pos
@@ -216,6 +308,10 @@ parser = argparse.ArgumentParser(
 # NOTE: it's fair to expect *FOR NOW* that cores are the same for a given recombination
 parser.add_argument("-t", "--target_contig", help="Path to the genome/contig with target site")
 parser.add_argument("-d", "--donor_contig", help="Path to the genome/contig with donor site", required=False)
+parser.add_argument('--other_sequences', nargs='+', 
+                    help='Specify one or more additional plasmids/genomes to ' \
+                    'search for target and donor sites.')
+
 parser.add_argument(
     "--brna_plasmid", 
     help="Path to bRNA plasmid",
@@ -255,22 +351,22 @@ donor_contig_record = SeqIO.read(args.donor_contig, "genbank")
 donor_contig = str(donor_contig_record.seq)
 
 print("Finding target site in target contig")
-target_strand, target_start, target_stop = find_matches(target_site, target_contig)
+target_strand, target_start, target_stop = find_unique_match(target_site, target_contig)
 if target_strand == -1:
     target_contig_record = genbank_utils.reverse_complement_record(target_contig_record)
 # Add target site features
 target_contig_record = annotate_site(
-    target_contig_record, target_start, target_site, lt, target_core, rt, 
+    target_contig_record, target_start, target_site, lt, rt, 
     mode="Target")
 
 
 print("Finding donor site in donor contig")
-donor_strand, donor_start, donor_stop = find_matches(donor_site, donor_contig) # NOTE: this is wrt - strand if applicable
+donor_strand, donor_start, donor_stop = find_unique_match(donor_site, donor_contig) # NOTE: this is wrt - strand if applicable
 if donor_strand == -1:
     donor_contig_record = genbank_utils.reverse_complement_record(donor_contig_record)
 # Add donor site features
 donor_contig_record = annotate_site(
-    donor_contig_record, donor_start, donor_site, ld, donor_core, rd, 
+    donor_contig_record, donor_start, donor_site, ld, rd, 
     mode="Donor")
 
 if mode == "insertion":
