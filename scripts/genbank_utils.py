@@ -133,21 +133,36 @@ def orient_record_around_pos(record, new_start):
     return new_record
 
 
-target_path = "/groups/cress/projects/efactors/jack/insertion_mapping/misc/gbtest/NATIVE_Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk"
-out_path = "/groups/cress/projects/efactors/jack/insertion_mapping/misc/gbtest/RC_Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk"
-# donor_path = "/groups/cress/projects/efactors/jack/insertion_mapping/misc/W9G3HH_30kbp BAC_gSES0133.gbk"
+def shift_feature(feature, offset):
+    """
+    Shifts a biopython feature's position by a certain offset
+    """
+    shifted_feature = copy.deepcopy(feature)
+    shifted_feature.location = FeatureLocation(
+        start=int(feature.location.start) + offset,
+        end=int(feature.location.end) + offset,
+        strand=feature.location.strand
+    )
+    return shifted_feature
 
-record = SeqIO.read(target_path, "genbank")
-record = reverse_complement_record(record)
-# donor_record = SeqIO.read(donor_path, "genbank")
 
-# print()
-# print("LENGTH: ", len(record.seq))
+if __name__ == "__main__":
+
+    target_path = "/groups/cress/projects/efactors/jack/insertion_mapping/misc/gbtest/NATIVE_Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk"
+    out_path = "/groups/cress/projects/efactors/jack/insertion_mapping/misc/gbtest/RC_Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk"
+    # donor_path = "/groups/cress/projects/efactors/jack/insertion_mapping/misc/W9G3HH_30kbp BAC_gSES0133.gbk"
+
+    record = SeqIO.read(target_path, "genbank")
+    record = reverse_complement_record(record)
+    # donor_record = SeqIO.read(donor_path, "genbank")
+
+    # print()
+    # print("LENGTH: ", len(record.seq))
 
 
 
 
-with open(out_path, "w") as out:
-    SeqIO.write(record, out, "genbank")
+    with open(out_path, "w") as out:
+        SeqIO.write(record, out, "genbank")
 
 
