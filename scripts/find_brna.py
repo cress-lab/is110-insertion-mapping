@@ -25,19 +25,38 @@ def find_brna_sequence(record:SeqRecord):
         r'[ACGT]{2}TT[ACGT]{7}'
         r'TGGTTTCACT'
     )
-    search_strand = "+"
-    # print(f"Searching for bRNA on ({search_strand}) strand...")
-    match = pattern.search(str(record.seq))
-    if not match:
-        search_strand = "-"
-        # print(f"Searching for bRNA on ({search_strand}) strand...")
-        match = pattern.search(str(record.seq.reverse_complement()))
-    if match:
-        brna_seq = str(match.group())
-        print(f"Found bRNA on ({search_strand}) strand: {brna_seq}")
-        return brna_seq
-    else:
-        raise ValueError("No bRNA found!")
+    # search_strand = "+"
+    # # print(f"Searching for bRNA on ({search_strand}) strand...")
+    # match = pattern.search(str(record.seq))
+    # if not match:
+    #     search_strand = "-"
+    #     # print(f"Searching for bRNA on ({search_strand}) strand...")
+    #     match = pattern.search(str(record.seq.reverse_complement()))
+    # if match:
+    #     brna_seq = str(match.group())
+    #     print(f"Found bRNA on ({search_strand}) strand: {brna_seq}")
+    #     return brna_seq
+    # else:
+    #     raise ValueError("No bRNA found!")
+    sequence = str(record.seq)
+    seq_len = len(sequence)
+    circular_sequence = sequence + sequence  # simulate circular genome
+
+    # Search forward strand
+    match = pattern.search(circular_sequence)
+    if match and match.start() < seq_len:
+        print(f"Found bRNA on (+) strand: {match.group()}")
+        return match.group()
+
+    # Search reverse strand
+    rev_sequence = str(record.seq.reverse_complement())
+    circular_rev = rev_sequence + rev_sequence
+    match = pattern.search(circular_rev)
+    if match and match.start() < seq_len:
+        print(f"Found bRNA on (-) strand: {match.group()}")
+        return match.group()
+    raise ValueError("No bRNA found!")
+
 
 
 def find_target_guide(brna_sequence:str):
