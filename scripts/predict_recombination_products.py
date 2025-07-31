@@ -13,13 +13,13 @@ import copy
 import os
 
 class bRNAReaction():
-    def __init__(self, brna_path, other_plasmid_paths, out_dir):
+    def __init__(self, brna_path, other_sequence_paths, out_dir):
         self.brna_path = brna_path
-        self.other_plasmid_paths = other_plasmid_paths
+        self.other_sequence_paths = other_sequence_paths
         self.out_dir = out_dir
         self._process_brna()
         # self._read_dna_files()
-        self._identify_plasmids()
+        self._identify_sequences()
 
     def _process_brna(self):
         # Determines target and donor sites from bRNA in bRNA plasmid
@@ -50,19 +50,19 @@ class bRNAReaction():
             total_target_sites = sum(len(i) for i in target_matches)
             raise ValueError(f"Expected exactly one target site match, but found {total_target_sites} total.")
         
-    def _identify_plasmids(self):
-        # Read other plasmid records
-        plasmid_paths = [self.brna_path] + self.other_plasmid_paths
-        other_plasmids = [
-            SeqIO.read(file, "genbank") for file in self.other_plasmid_paths
+    def _identify_sequences(self):
+        # Read other sequence records
+        sequence_paths = [self.brna_path] + self.other_sequence_paths
+        other_sequence_records = [
+            SeqIO.read(file, "genbank") for file in self.other_sequence_paths
             ]
-        plasmids = [self.brna_plasmid_record] + other_plasmids
-        plasmid_seqs = [str(record.seq) for record in plasmids]
+        sequence_records = [self.brna_plasmid_record] + other_sequence_records
+        seqs = [str(record.seq) for record in sequence_records]
         # Search all plasmid records for target and donor sites
         target_matches = [
-            self.find_matches(self.target_site, i) for i in plasmid_seqs]
+            self.find_matches(self.target_site, i) for i in seqs]
         donor_matches = [
-            self.find_matches(self.donor_site, i) for i in plasmid_seqs]
+            self.find_matches(self.donor_site, i) for i in seqs]
         # Make sure only one of each site is found
         self._verify_unique_sites(target_matches, donor_matches)
         # Determine rearrangement mode
@@ -71,8 +71,8 @@ class bRNAReaction():
         self.target_strand, self.target_start, self.target_end = target_matches[target_index][0]
         self.donor_strand, self.donor_start, self.donor_end = donor_matches[donor_index][0]
         # Store target contig, flip to + strand if necessary
-        print(f"Found target plasmid: {plasmid_paths[target_index]}\n\tstart: {self.target_start}\n\tend: {self.target_end}")
-        target_contig = plasmids[target_index]
+        print(f"Found target plasmid: {sequence_paths[target_index]}\n\tstart: {self.target_start}\n\tend: {self.target_end}")
+        target_contig = sequence_records[target_index]
         # if self.target_strand == -1:
         #     target_contig = genbank_utils.reverse_complement_record(target_contig)
         # Add annotations to target record
@@ -105,9 +105,9 @@ class bRNAReaction():
                 #     self.donor_split_site = L - self.donor_split_site
         else:
             self.mode = "insertion"
-            print(f"Found donor plasmid: {plasmid_paths[donor_index]}")
+            print(f"Found donor plasmid: {sequence_paths[donor_index]}")
             # Store separate donor record for insertions
-            donor_contig = plasmids[donor_index]
+            donor_contig = sequence_records[donor_index]
             # Add annotations to donor record
             # if self.donor_strand == -1:
             #     donor_contig = genbank_utils.reverse_complement_record(donor_contig)
@@ -238,7 +238,6 @@ class bRNAReaction():
         # print(cut_points, [self.target_start, self.donor_start])
         upstream_cut = min(cut_points)
         downstream_cut = max(cut_points)
-
         result = copy.deepcopy(self.target_contig)
         original_features = self.target_contig.features
         features = []
@@ -248,6 +247,13 @@ class bRNAReaction():
             + reverse_complement(self.target_contig.seq[upstream_cut:downstream_cut])
             + self.target_contig.seq[downstream_cut:]
         )
+        print("Junctions before inversion")
+        print(str(self.target_contig.seq[upstream_cut-10:upstream_cut+10]))
+        print(str(self.target_contig.seq[downstream_cut-10:downstream_cut+10]))
+        print("Junctions after inversion")
+        print(result_seq[upstream_cut-10:upstream_cut+10])
+        print(result_seq[downstream_cut-10:downstream_cut+10])
+
         # print(result_seq == self.target_contig.seq)
         # print(reverse_complement(self.target_contig.seq[upstream_cut:downstream_cut]))
         result.seq = result_seq
@@ -257,6 +263,8 @@ class bRNAReaction():
             np.arange(upstream_cut, downstream_cut)[::-1],
             np.arange(downstream_cut, len(self.target_contig.seq)),
         ])
+        # print(invert_indices[upstream_cut-10:upstream_cut+10])
+        # print(invert_indices[downstream_cut-10:downstream_cut+10])
         # for feature in original_features:
         for feature in original_features:
             starts_before_le = feature.location.start < upstream_cut
@@ -448,8 +456,8 @@ if __name__ == "__main__":
     # NOTE: invariant AA/TT in the RDG
     # NOTE: the cores will be found as the 2 cores in the target guide
     # NOTE: it's fair to expect *FOR NOW* that cores are the same for a given recombination
-    parser.add_argument('-s', '--other_sequences', nargs='+', 
-                        help='Specify one or more additional plasmids/genomes to ' \
+    parser.add_argument('-s', '--other_sequence_records', nargs='+', 
+                        help='Specify one or more additional sequence_records/genomes to ' \
                         'search for target and donor sites.')
 
     parser.add_argument(
@@ -466,13 +474,13 @@ if __name__ == "__main__":
     #         # "--target_contig", "/groups/cress/projects/is110/sequences/SLMQRT/Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk",
     #         # # "--donor_contig", "/groups/cress/projects/is110/sequences/SLMQRT/monomeric_BAC_for_plate_scrape_13kb.gbk",
     #         # "--donor_contig", "/groups/cress/projects/efactors/jack/insertion_mapping/misc/W9G3HH_30kbp_BAC_gSES0133.gbk",
-    #         "--brna_path", "../data/plasmids/P7YMY9_pSES0099.gbk",
+    #         "--brna_path", "../data/sequence_records/P7YMY9_pSES0099.gbk",
     #         "-o", "../misc/insertion_test", 
-    #         "--other_sequences", 
+    #         "--other_sequence_records", 
     # #        "/groups/cress/projects/is110/sequences/SLMQRT/Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk", 
     # #        "/groups/cress/projects/efactors/jack/insertion_mapping/misc/W9G3HH_30kbp_BAC_gSES0133.gbk",
     #         "../data/genomes/Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk", 
-    #         "../data/plasmids/W9G3HH_30kbp_BAC_gSES0133.gbk",
+    #         "../data/sequence_records/W9G3HH_30kbp_BAC_gSES0133.gbk",
     #         ])
     args = parser.parse_args()
     def write_genbank(record, path):
@@ -483,7 +491,7 @@ if __name__ == "__main__":
         os.makedirs(args.out_dir, exist_ok=True)
 
     Experiment = bRNAReaction(
-        args.brna_path, args.other_sequences, args.out_dir
+        args.brna_path, args.other_sequence_records, args.out_dir
     )
     results = Experiment.calculate_product()
     print(f"Saving results to {args.out_dir}")
