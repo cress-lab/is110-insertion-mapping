@@ -91,7 +91,6 @@ def make_excision_testcase(target_site, donor_site):
     )
     return [format_as_seqrecord(i) for i in [test1, test2,]]
 
-"#66FF00"
 
 def add_features(record):
     upstream_feature = SeqFeature(
@@ -159,23 +158,46 @@ def add_features(record):
     record.features += new_features
     
 
+def annotate(record, site, le, re, mode):
+    seq = str(record.seq)
+    strand, start, _ = bRNAReaction.find_matches(site, seq)[0]
+    # if strand == -1:
+    #     start = convert_pos_to_neg_strand(start, seq)
+    # le_start, le_end = bRNAReaction.find_partial_site(le, site, start, strand)
+    # re_start, re_end = bRNAReaction.find_partial_site(re, site, start, strand)
+    bRNAReaction.annotate_site(
+        record, start, site, le, re, strand, inplace=True, mode=mode
+    )
+
+def convert_pos_to_neg_strand(pos, seq):
+    L = len(str(seq))
+    return L - pos
+
+
 ts = "TAGGCGTCTACTTA"
+lt, rt = 'TAGGCGT', 'ACTTA'
 ds = "ACAGTATCTTGTAT"
+ld, rd = 'ACAGTAT', 'TGTAT'
 
 
-
-tests = make_inversion_testcase(ts, ds)
-for i, test in enumerate(tests):
-    bRNAReaction.annotate_site(test, 1000, ts, 'TAGGCGT', 'ACTTA', inplace=True)
-    bRNAReaction.annotate_site(test, 1000 + len(ts) + 1000, ds, 'ACAGTAT', 'TGTAT', mode="Donor", inplace=True)
+inversion_tests = make_inversion_testcase(ts, ds)
+for i, test in enumerate(inversion_tests):
+    print(f"Inversion test{i}")
+    annotate(test, ts, lt, rt, "Target")
+    annotate(test, ds, ld, rd, "Donor")
+    # bRNAReaction.annotate_site(test, 1000, ts, 'TAGGCGT', 'ACTTA', inplace=True)
+    # bRNAReaction.annotate_site(test, 1000 + len(ts) + 1000, ds, 'ACAGTAT', 'TGTAT', mode="Donor", inplace=True)
     add_features(test)
     with open(f"../misc/invex/inv/test{i}.gbk", "w") as f:
         SeqIO.write(test, f, "genbank")
 
-tests = make_excision_testcase(ts, ds)
-for i, test in enumerate(tests):
-    bRNAReaction.annotate_site(test, 1000, ts, 'TAGGCGT', 'ACTTA', inplace=True)
-    bRNAReaction.annotate_site(test, 1000 + len(ts) + 1000, ds, 'ACAGTAT', 'TGTAT', mode="Donor", inplace=True)
+excision_tests = make_excision_testcase(ts, ds)
+for i, test in enumerate(excision_tests):
+    print(f"Excision test{i}")
+    annotate(test, ts, lt, rt, "Target")
+    annotate(test, ds, ld, rd, "Donor")
+    # bRNAReaction.annotate_site(test, 1000, ts, 'TAGGCGT', 'ACTTA', inplace=True)
+    # bRNAReaction.annotate_site(test, 1000 + len(ts) + 1000, ds, 'ACAGTAT', 'TGTAT', mode="Donor", inplace=True)
     add_features(test)
     with open(f"../misc/invex/ex/test{i}.gbk", "w") as f:
         SeqIO.write(test, f, "genbank")
