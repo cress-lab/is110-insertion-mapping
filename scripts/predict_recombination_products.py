@@ -1,14 +1,11 @@
 import argparse
 import re
-import pandas as pd
 import numpy as np
 from Bio import SeqIO
-from Bio.Seq import Seq, reverse_complement
+from Bio.Seq import reverse_complement
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-# from find_brna import find_target_donor_sites
 import find_brna
-import genbank_utils
 import copy
 import os
 
@@ -18,7 +15,6 @@ class bRNAReaction():
         self.other_sequence_paths = other_sequence_paths
         self.out_dir = out_dir
         self._process_brna()
-        # self._read_dna_files()
         self._identify_sequences()
 
     def _process_brna(self):
@@ -27,7 +23,6 @@ class bRNAReaction():
         target, donor = find_brna.find_target_donor_sites(self.brna_plasmid_record)
         self.target_site, self.lt, self.target_core, self.rt = target
         self.donor_site, self.ld, self.donor_core, self.rd = donor
-
         print(f"Using:\tTarget site: {self.target_site}\n\tDonor site: {self.donor_site}")
 
     # TODO: more descriptive error messages
@@ -58,27 +53,64 @@ class bRNAReaction():
             ]
         sequence_records = [self.brna_plasmid_record] + other_sequence_records
         seqs = [str(record.seq) for record in sequence_records]
-        # Search all plasmid records for target and donor sites
+        # Search all sequence records for target and donor sites
         target_matches = [
             self.find_matches(self.target_site, i) for i in seqs]
         donor_matches = [
             self.find_matches(self.donor_site, i) for i in seqs]
-        # Make sure only one of each site is found
         self._verify_unique_sites(target_matches, donor_matches)
         # Determine rearrangement mode
         target_index = np.where([bool(i) for i in target_matches])[0].item()
         donor_index = np.where([bool(i) for i in donor_matches])[0].item()
         self.target_strand, self.target_start, self.target_end = target_matches[target_index][0]
         self.donor_strand, self.donor_start, self.donor_end = donor_matches[donor_index][0]
-        # Store target contig, flip to + strand if necessary
-        print(f"Found target plasmid: {sequence_paths[target_index]}\n\tstart: {self.target_start}\n\tend: {self.target_end}")
-        target_contig = sequence_records[target_index]
-        # if self.target_strand == -1:
-        #     target_contig = genbank_utils.reverse_complement_record(target_contig)
-        # Add annotations to target record
-        self.annotate_site(target_contig, self.target_start, self.target_site, 
-                           self.lt, self.rt, self.target_strand, mode="Target", inplace=True)
-        self.target_contig = target_contig
+        print(f"Found target sequence: {sequence_paths[target_index]}\n\tstart: {self.target_start}\n\tend: {self.target_end}")
+        self._find_split_sites()
+        # Store target contig
+        self.target_contig = sequence_records[target_index]
+        self.annotate_site(
+            record=self.target_contig, 
+            site_start=self.target_start, 
+            site_seq=self.target_site, 
+            le_seq=self.lt, 
+            re_seq=self.rt, 
+            strand=self.target_strand, 
+            mode="Target", 
+            inplace=True)
+        # self.target_contig = target_contig
+        # Mode-specific preprocessing
+        if target_index == donor_index:
+            self.annotate_site(
+                record=self.target_contig, 
+                site_start=self.donor_start, 
+                site_seq=self.donor_site, 
+                le_seq=self.ld, 
+                re_seq=self.rd, 
+                strand=self.donor_strand, 
+                mode="Donor", 
+                inplace=True
+                )
+            if self.target_strand == self.donor_strand:
+                self.mode = "excision"
+            else:
+                self.mode = "inversion"
+        else:
+            self.mode = "insertion"
+            # Store separate donor record for insertions
+            print(f"Found donor sequence: {sequence_paths[donor_index]}")
+            self.donor_contig = sequence_records[donor_index]
+            self.annotate_site(
+                record=self.donor_contig, 
+                site_start=self.donor_start, 
+                site_seq=self.donor_site, 
+                le_seq=self.ld, 
+                re_seq=self.rd, 
+                strand=self.donor_strand, 
+                mode="Donor", 
+                inplace=True
+                )
+
+    def _find_split_sites(self):
         # Store split sites
         if self.target_strand == 1:
             self.target_split_site = self.target_end - len(self.rt)
@@ -89,38 +121,10 @@ class bRNAReaction():
         else:
             self.donor_split_site = self.donor_start + len(self.rt)
         print(f"Split sites: DONOR: {self.donor_split_site} TARGET: {self.target_split_site}")
-        # self.donor_split_site = self.donor_start + 2 + len(self.lt)
-        # self.donor_split_site = self.donor_start + 2 + len(self.ld)
-        # Mode-specific preprocessing
-        if target_index == donor_index:
-            if self.target_strand == self.donor_strand:
-                self.mode = "excision"
-            else:
-                self.mode = "inversion"
-                # re-calculate split site for whichever site is on the (-) strand
-                # L = len(self.target_contig.seq)
-                # if self.target_strand == -1:
-                #     self.target_split_site = L - self.target_split_site
-                # if self.donor_strand == -1:
-                #     self.donor_split_site = L - self.donor_split_site
-        else:
-            self.mode = "insertion"
-            print(f"Found donor plasmid: {sequence_paths[donor_index]}")
-            # Store separate donor record for insertions
-            donor_contig = sequence_records[donor_index]
-            # Add annotations to donor record
-            # if self.donor_strand == -1:
-            #     donor_contig = genbank_utils.reverse_complement_record(donor_contig)
-            self.annotate_site(
-                donor_contig, self.donor_start, self.donor_site, self.ld, 
-                self.rd, self.donor_strand, mode="Donor", inplace=True)
-            self.donor_contig = donor_contig
-
+    
     def calculate_product(self):
         print(f"Calculating product in {self.mode} mode...")
         if self.mode == "insertion":
-            # donor_split_site = self.donor_start + 2 + len(self.ld)
-            # target_split_site = self.target_start + 2 + len(self.lt)
             result = self.calculate_insertion()
             return result
         elif self.mode == "excision":
@@ -131,167 +135,123 @@ class bRNAReaction():
             raise ValueError("Invalid mode, no product calculated!")
     
     def calculate_insertion(self):
-        """
-        Calculates the product of an insertion reaction.
-        """
-        insertion_size = len(self.donor_contig.seq)
-        insertion_record = genbank_utils.orient_record_around_pos(self.donor_contig, self.donor_split_site)
-        # If the donor is on a different strand in its native plasmid than the 
-        # target strand in the target plasmid, reverse complement the donor 
-        # plasmid so we can add its sequence directly
-        if self.donor_strand != self.target_strand:
-            insertion_record = genbank_utils.reverse_complement_record(insertion_record)
-        # Figure out the new sequence
-        new_seq = (
-            self.target_contig.seq[:self.target_split_site]
-            + insertion_record.seq
-            + self.target_contig.seq[self.target_split_site:]
-            )
-        # Transfer features
-        features = []
-        for feature in insertion_record.features:
-            shifted_feature = genbank_utils.shift_feature(feature, self.target_split_site)
-            features.append(shifted_feature)
-        
-        for feat in self.target_contig.features:
-            feature = copy.deepcopy(feat)
-            ends_before_insertion = feature.location.end <= self.target_split_site
-            starts_before_insertion = feature.location.start < self.target_split_site
-            before_insertion = starts_before_insertion & ends_before_insertion
-            # If feature overlaps insertion, just drag it across the insertion. 
-            if starts_before_insertion and not ends_before_insertion:
-                feature.location = FeatureLocation(
-                    start=int(feature.location.start),
-                    end=int(feature.location.end) + insertion_size,
-                    strand=feature.location.strand
-                )
-            # Shift the feature position up if it's to the right of the insertion
-            elif not before_insertion:
-                feature = genbank_utils.shift_feature(feature, insertion_size)
-            features.append(feature)
-        # Create the final record
-        result_id = "recombined product" # I'll fill this in later.
-        result_name = "recombined_product" # I'll fill this in later.
-        result_description = f"Predicted recombination product using target site = {self.target_site} and donor site = {self.donor_site}"
-        recombinant_record = SeqRecord(new_seq, id=result_id, name=result_name, 
-                                    description=result_description)
-        # Mark the record as circular
-        print("Assuming circular topology for insertion")
-        recombinant_record.annotations["topology"] = "circular"
-        recombinant_record.annotations["molecule_type"] = "DNA"
-        # Apply features to genbank record
-        recombinant_record.features = features
+        self.add_partial_sites(self.target_contig, self.target_split_site)
+        self.add_partial_sites(self.target_contig, self.target_split_site)
+        self.add_partial_sites(self.donor_contig, self.donor_split_site)
+        self.add_partial_sites(self.donor_contig, self.donor_split_site)
 
-        # # DEBUGGING
-        # self.insert = insertion_record
-        return [recombinant_record]
+        result = (
+            self.target_contig[:self.target_split_site]
+            + self.donor_contig[self.donor_split_site:]
+            + self.donor_contig[:self.donor_split_site]
+            + self.target_contig[self.target_split_site:]
+        )
+        prefix = (f"Predicted recombination product using target site = "
+                  f"{self.target_site} and donor site = {self.donor_site}.\n"
+                  f"Donor sequence info:\n{self.donor_contig.description}\n"
+                  "Target sequence info:")
+        result = self.transfer_metadata(
+            old_record=self.target_contig,
+            new_record=result,
+            new_description_prefix=prefix
+        )
+        return [result]
 
+    @classmethod
+    def _split_feature(cls, feature:SeqFeature, split_site:int):
+        start = int(feature.location.start)
+        end = int(feature.location.end)
+        strand = feature.location.strand
+        original_label = (
+            feature.qualifiers.get("label", [feature.type])[0]
+            if feature.qualifiers else feature.type
+        )
+        # Upstream part
+        upstream_loc = FeatureLocation(start, split_site, strand=strand)
+        upstream_feat = SeqFeature(upstream_loc, type="misc_feature", qualifiers={
+            "label": [f"UPSTREAM SPLIT: {original_label}"],
+            "partial": ["true"],
+            "ApEinfo_fwdcolor": ["#C0C0C0"], 
+            "ApEinfo_revcolor": ["#C0C0C0"],
+            # "ApEinfo_graphicformat": ["arrow_data {{}}"], # Hide by default
+        })
+        # Downstream part
+        downstream_loc = FeatureLocation(split_site, end, strand=strand)
+        downstream_feat = SeqFeature(downstream_loc, type="misc_feature", qualifiers={
+            "label": [f"DOWNSTREAM SPLIT: {original_label}"],
+            "partial": ["true"],
+            "ApEinfo_fwdcolor": ["#C0C0C0"],
+            "ApEinfo_revcolor": ["#C0C0C0"],
+            # "ApEinfo_graphicformat": ["arrow_data {{}}"], # Hide by default
+        })
+        return [upstream_feat, downstream_feat]
+    
+    @classmethod
+    def add_partial_sites(cls, record:SeqRecord, cut_site:int, 
+                          inplace:bool=True):
+        if not inplace:
+            record = copy.deepcopy(record)
+        split_features = []
+        for feature in record.features:
+            if feature.type != "source":
+                starts_before_cut_site = feature.location.start < cut_site
+                ends_before_cut_site = feature.location.end <= cut_site
+                if starts_before_cut_site & (not ends_before_cut_site):
+                    split_feats = cls._split_feature(feature, cut_site)
+                    split_features.extend(split_feats)
+        record.features.extend(split_features)
+        if not inplace:
+            return record
+    
     def calculate_excision(self):
         cut_points = [self.target_split_site, self.donor_split_site]
         upstream_cut = min(cut_points)
         downstream_cut = max(cut_points)
-        excision_length = downstream_cut - upstream_cut
-
-
-        leftovers = copy.deepcopy(self.target_contig)
-        excised = copy.deepcopy(self.target_contig)
-        # Determine excision sequences
-        leftovers_seq = (self.target_contig.seq[:upstream_cut] 
-                         + self.target_contig.seq[downstream_cut:])
-        excised_seq = self.target_contig.seq[upstream_cut:downstream_cut]
-
-        leftovers_features, excised_features = [], []
-        for feature in self.target_contig.features:
-            starts_before_le = feature.location.start < upstream_cut
-            ends_before_le = feature.location.end <= upstream_cut
-
-            starts_before_re = feature.location.start < downstream_cut
-            ends_before_re = feature.location.end <= downstream_cut
-
-            if starts_before_le & ends_before_le:
-                leftovers_features.append(feature)
-            elif (not starts_before_re) & (not ends_before_re):
-                # Shift features upstream by length of excision
-                shifted_feat = genbank_utils.shift_feature(feature, -excision_length)
-                leftovers_features.append(shifted_feat)
-            elif starts_before_le & (not ends_before_le):
-                # Break upstream overlap
-                # print("Breaking upstream: ", feature)
-                pass
-            elif starts_before_re & (not ends_before_re):
-                # Break downstream overlap
-                # print("Breaking downstream: ", feature)
-                pass
-            else:
-                # These are the features that end up in the excised product
-                shifted_feat = genbank_utils.shift_feature(feature, -upstream_cut)
-                excised_features.append(shifted_feat)
-        leftovers.features = leftovers_features
-        excised.features = excised_features
-        # Add sequences
-        leftovers.seq = leftovers_seq
-        excised.seq = excised_seq
+        self.add_partial_sites(self.target_contig, upstream_cut)
+        self.add_partial_sites(self.target_contig, downstream_cut)
+        leftovers = (self.target_record[:upstream_cut] 
+                     + self.target_record[downstream_cut:])
+        excised = self.target_record[upstream_cut:downstream_cut]
+        # Transfer metadata
+        common_prefix = (
+            f"excision between {self.target_split_site+1} and "
+            f"{self.donor_split_site+1} with target site = {self.target_site}, "
+            f"donor site = {self.donor_site}\nDerived from:"
+                      )
+        leftovers = self.transfer_metadata(
+            old_record=self.target_contig,
+            new_record=leftovers,
+            new_description_prefix=f"Backbone sequence from {common_prefix}"
+        )
+        excised = self.transfer_metadata(
+            old_record=self.target_contig,
+            new_record=excised,
+            new_description_prefix=f"Excised sequence from {common_prefix}"
+        )
         return [leftovers, excised]
 
     def calculate_inversion(self):
         cut_points = [self.target_split_site, self.donor_split_site]
-        # print(cut_points, [self.target_start, self.donor_start])
         upstream_cut = min(cut_points)
         downstream_cut = max(cut_points)
-        result = copy.deepcopy(self.target_contig)
-        original_features = self.target_contig.features
-        features = []
-        # Calculate new sequence
-        result_seq = (
-            self.target_contig.seq[:upstream_cut]
-            + reverse_complement(self.target_contig.seq[upstream_cut:downstream_cut])
-            + self.target_contig.seq[downstream_cut:]
+        self.add_partial_sites(self.target_contig, upstream_cut)
+        self.add_partial_sites(self.target_contig, downstream_cut)
+        inverted_record = (
+            self.target_contig[:upstream_cut]
+            + self.target_contig[upstream_cut:downstream_cut].reverse_complement()
+            + self.target_contig[downstream_cut:]
         )
-        print("Junctions before inversion")
-        print(str(self.target_contig.seq[upstream_cut-10:upstream_cut+10]))
-        print(str(self.target_contig.seq[downstream_cut-10:downstream_cut+10]))
-        print("Junctions after inversion")
-        print(result_seq[upstream_cut-10:upstream_cut+10])
-        print(result_seq[downstream_cut-10:downstream_cut+10])
-
-        # print(result_seq == self.target_contig.seq)
-        # print(reverse_complement(self.target_contig.seq[upstream_cut:downstream_cut]))
-        result.seq = result_seq
-        # Store indices to use in genbank_utils.reverse_complement_feature
-        invert_indices = np.concatenate([
-            np.arange(upstream_cut),
-            np.arange(upstream_cut, downstream_cut)[::-1],
-            np.arange(downstream_cut, len(self.target_contig.seq)),
-        ])
-        # print(invert_indices[upstream_cut-10:upstream_cut+10])
-        # print(invert_indices[downstream_cut-10:downstream_cut+10])
-        # for feature in original_features:
-        for feature in original_features:
-            starts_before_le = feature.location.start < upstream_cut
-            ends_before_le = feature.location.end <= upstream_cut
-
-            starts_before_re = feature.location.start < downstream_cut
-            ends_before_re = feature.location.end <= downstream_cut
-
-            if (starts_before_le & ends_before_le) or ((not starts_before_re) & (not ends_before_re)):
-                # print(feature)
-                features.append(feature)
-                # print("Appended! ", len(features))
-            elif starts_before_le & (not ends_before_le):
-                # Break upstream overlap
-                # print("Breaking upstream: ", feature)
-                pass
-            elif starts_before_re & (not ends_before_re):
-                # Break downstream overlap
-                # print("Breaking downstream: ", feature)
-                pass
-            else:
-                # These are the features that end up inverted
-                inverted = genbank_utils.reverse_complement_feature(feature, invert_indices)
-                features.append(inverted)
-            result.features = features
-            # print(len(features), len(self.target_contig.features))
-        return [result]
+        # Transfer metadata
+        inversion_prefix = (
+            f"Inversion between {self.target_split_site+1} and "
+            f"{self.donor_split_site+1} with target site = {self.target_site}, "
+            f"donor site = {self.donor_site}\nDerived from:"
+                      )
+        inverted_record = self.transfer_metadata(
+            old_record=self.target_contig, 
+            new_record=inverted_record, 
+            new_description_prefix=inversion_prefix)
+        return [inverted_record]
 
     @classmethod    
     def find_matches(cls, site:str, seq:str):
@@ -341,8 +301,6 @@ class bRNAReaction():
         """        
         allowed_modes = ["Target", "Donor"]
         assert mode in allowed_modes, f"mode must be one of: {allowed_modes}"
-
-        # print(site_start, site_seq, le_seq, core, re_seq)
         colors = {
             "Target": "#00aeff",
             "Donor": "#ff8400",
@@ -419,18 +377,18 @@ class bRNAReaction():
             return new_record
 
     @classmethod
-    def find_partial_site(cls, part, site, contig_pos, strand=+1):
+    def find_partial_site(cls, part:str, site:str, contig_pos:int, strand=+1):
         """Finds locations of parts of a given site in relation to the location of
         the overall site in its native contig
 
         Args:
             part (str): Part of site. e.g. LT, RT, LD, RD
             site (str): Full sequence of target or donor site
-            contig_pos (str): Start index of site in contig
+            contig_pos (int): Start index of site in contig
             strand (int): Strand in which the site is found on the contig. 
                 Must be either 1 or -1. Defaults to 1.
         Returns:
-            part_start, part_end: positions wrt the positive strand
+            (part_start, part_end): positions wrt the positive strand
         """    
         if strand == -1:
             part = reverse_complement(part)
@@ -443,6 +401,22 @@ class bRNAReaction():
         part_start, part_end = contig_pos + part_start, contig_pos + part_end
         part_start, part_end = sorted([part_start, part_end])
         return part_start, part_end
+
+    @classmethod
+    def transfer_metadata(cls, old_record:SeqRecord, new_record:SeqRecord, 
+                          new_description_prefix:str=""):
+        # Transfer metadata
+        new_description = f"{new_description_prefix}\n{old_record.description}"
+        new_record.id = old_record.id
+        new_record.name = old_record.name
+        new_record.description = new_description
+        new_record.annotations = old_record.annotations.copy()
+        return new_record
+
+def write_genbank(record, path):
+    with open(path, "w") as output_handle:
+        SeqIO.write(record, output_handle, "genbank")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -465,6 +439,8 @@ if __name__ == "__main__":
         "--brna_path", 
         help="Path to bRNA plasmid",
         )
+    parser.add_argument('--allow_linear', action='store_true',
+                    help='Treat the output product as circular unless this is set.')
 
     parser.add_argument("-o", "--out_dir", required=True, help="Output directory",)
 
@@ -483,9 +459,6 @@ if __name__ == "__main__":
     #         "../data/sequence_records/W9G3HH_30kbp_BAC_gSES0133.gbk",
     #         ])
     args = parser.parse_args()
-    def write_genbank(record, path):
-        with open(path, "w") as output_handle:
-            SeqIO.write(record, output_handle, "genbank")
 
     if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir, exist_ok=True)
@@ -494,6 +467,9 @@ if __name__ == "__main__":
         args.brna_path, args.other_sequence_records, args.out_dir
     )
     results = Experiment.calculate_product()
+    if not args.allow_linear:
+        for record in results:
+            record.annotations["topology"] = "circular"
     print(f"Saving results to {args.out_dir}")
     if Experiment.mode == "insertion":
         write_genbank(Experiment.target_contig, "../misc/insertion_test/genome.gbk")
