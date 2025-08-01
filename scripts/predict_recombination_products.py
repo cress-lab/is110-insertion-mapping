@@ -9,7 +9,7 @@ import find_brna
 import copy
 import os
 
-class bRNAReaction():
+class BridgeRNAReaction():
     def __init__(self, brna_path, other_sequence_paths, out_dir):
         self.brna_path = brna_path
         self.other_sequence_paths = other_sequence_paths
@@ -157,52 +157,6 @@ class bRNAReaction():
         )
         return [result]
 
-    @classmethod
-    def _split_feature(cls, feature:SeqFeature, split_site:int):
-        start = int(feature.location.start)
-        end = int(feature.location.end)
-        strand = feature.location.strand
-        original_label = (
-            feature.qualifiers.get("label", [feature.type])[0]
-            if feature.qualifiers else feature.type
-        )
-        # Upstream part
-        upstream_loc = FeatureLocation(start, split_site, strand=strand)
-        upstream_feat = SeqFeature(upstream_loc, type="misc_feature", qualifiers={
-            "label": [f"UPSTREAM SPLIT: {original_label}"],
-            "partial": ["true"],
-            "ApEinfo_fwdcolor": ["#C0C0C0"], 
-            "ApEinfo_revcolor": ["#C0C0C0"],
-            # "ApEinfo_graphicformat": ["arrow_data {{}}"], # Hide by default
-        })
-        # Downstream part
-        downstream_loc = FeatureLocation(split_site, end, strand=strand)
-        downstream_feat = SeqFeature(downstream_loc, type="misc_feature", qualifiers={
-            "label": [f"DOWNSTREAM SPLIT: {original_label}"],
-            "partial": ["true"],
-            "ApEinfo_fwdcolor": ["#C0C0C0"],
-            "ApEinfo_revcolor": ["#C0C0C0"],
-            # "ApEinfo_graphicformat": ["arrow_data {{}}"], # Hide by default
-        })
-        return [upstream_feat, downstream_feat]
-    
-    @classmethod
-    def add_partial_sites(cls, record:SeqRecord, cut_site:int, 
-                          inplace:bool=True):
-        if not inplace:
-            record = copy.deepcopy(record)
-        split_features = []
-        for feature in record.features:
-            if feature.type != "source":
-                starts_before_cut_site = feature.location.start < cut_site
-                ends_before_cut_site = feature.location.end <= cut_site
-                if starts_before_cut_site & (not ends_before_cut_site):
-                    split_feats = cls._split_feature(feature, cut_site)
-                    split_features.extend(split_feats)
-        record.features.extend(split_features)
-        if not inplace:
-            return record
-    
     def calculate_excision(self):
         cut_points = [self.target_split_site, self.donor_split_site]
         upstream_cut = min(cut_points)
@@ -405,13 +359,84 @@ class bRNAReaction():
     @classmethod
     def transfer_metadata(cls, old_record:SeqRecord, new_record:SeqRecord, 
                           new_description_prefix:str=""):
-        # Transfer metadata
+        """
+        Transfer metadata from one SeqRecord to another, with an optional prefix
+        added to the new record. 
+        """
         new_description = f"{new_description_prefix}\n{old_record.description}"
         new_record.id = old_record.id
         new_record.name = old_record.name
         new_record.description = new_description
         new_record.annotations = old_record.annotations.copy()
         return new_record
+
+    @classmethod
+    def _split_feature(cls, feature:SeqFeature, split_site:int):
+        """Splits a sequence feature at a provided split site into an upstream
+        and downstream component. 
+
+        Args:
+            feature (SeqFeature): Feature to split
+            split_site (int): site to split at
+
+        Returns:
+            (upstream_feat, downstream_feat): New partial features
+        """        
+        start = int(feature.location.start)
+        end = int(feature.location.end)
+        strand = feature.location.strand
+        original_label = (
+            feature.qualifiers.get("label", [feature.type])[0]
+            if feature.qualifiers else feature.type
+        )
+        # Upstream part
+        upstream_loc = FeatureLocation(start, split_site, strand=strand)
+        upstream_feat = SeqFeature(upstream_loc, type="misc_feature", qualifiers={
+            "label": [f"UPSTREAM SPLIT: {original_label}"],
+            "partial": ["true"],
+            "ApEinfo_fwdcolor": ["#C0C0C0"], 
+            "ApEinfo_revcolor": ["#C0C0C0"],
+            # "ApEinfo_graphicformat": ["arrow_data {{}}"], # Hide by default
+        })
+        # Downstream part
+        downstream_loc = FeatureLocation(split_site, end, strand=strand)
+        downstream_feat = SeqFeature(downstream_loc, type="misc_feature", qualifiers={
+            "label": [f"DOWNSTREAM SPLIT: {original_label}"],
+            "partial": ["true"],
+            "ApEinfo_fwdcolor": ["#C0C0C0"],
+            "ApEinfo_revcolor": ["#C0C0C0"],
+            # "ApEinfo_graphicformat": ["arrow_data {{}}"], # Hide by default
+        })
+        return (upstream_feat, downstream_feat)
+    
+    @classmethod
+    def add_partial_sites(cls, record:SeqRecord, cut_site:int, 
+                          inplace:bool=True):
+        """Splits all features in a SeqRecord that pass through a certain spot
+        by adding new features corresponding to the upstream and downstream
+        portions of that feature.
+
+        Args:
+            record (SeqRecord): Record to add sites to.
+            cut_site (int): Site at which to split
+            inplace (bool, optional): Option to modify record inplace. Defaults to True.
+
+        Returns:
+            record (SeqRecord): Modified record, only returned if inplace=False
+        """        
+        if not inplace:
+            record = copy.deepcopy(record)
+        split_features = []
+        for feature in record.features:
+            if feature.type != "source":
+                starts_before_cut_site = feature.location.start < cut_site
+                ends_before_cut_site = feature.location.end <= cut_site
+                if starts_before_cut_site & (not ends_before_cut_site):
+                    split_feats = cls._split_feature(feature, cut_site)
+                    split_features.extend(split_feats)
+        record.features.extend(split_features)
+        if not inplace:
+            return record
 
 def write_genbank(record, path):
     with open(path, "w") as output_handle:
@@ -463,7 +488,7 @@ if __name__ == "__main__":
     if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir, exist_ok=True)
 
-    Experiment = bRNAReaction(
+    Experiment = BridgeRNAReaction(
         args.brna_path, args.other_sequence_records, args.out_dir
     )
     results = Experiment.calculate_product()
@@ -472,16 +497,12 @@ if __name__ == "__main__":
             record.annotations["topology"] = "circular"
     print(f"Saving results to {args.out_dir}")
     if Experiment.mode == "insertion":
-        write_genbank(Experiment.target_contig, "../misc/insertion_test/genome.gbk")
-        write_genbank(Experiment.donor_contig, "../misc/insertion_test/insert.gbk")
+        # write_genbank(Experiment.target_contig, "../misc/insertion_test/genome.gbk")
+        # write_genbank(Experiment.donor_contig, "../misc/insertion_test/insert.gbk")
         # write_genbank(Experiment.insert, "../misc/insertion_test/insert_oriented.gbk")
-        with open(os.path.join(args.out_dir, "insertion.gbk"), "w") as output_handle:
-            SeqIO.write(results[0], output_handle, "genbank")
+        write_genbank(results[0], os.path.join(args.out_dir, "insertion.gbk"))
     elif Experiment.mode == "excision":
-        with open(os.path.join(args.out_dir, "leftovers.gbk"), "w") as output_handle:
-            SeqIO.write(results[0], output_handle, "genbank")
-        with open(os.path.join(args.out_dir, "excision.gbk"), "w") as output_handle:
-            SeqIO.write(results[1], output_handle, "genbank")
+        write_genbank(results[0], os.path.join(args.out_dir, "leftovers.gbk"))
+        write_genbank(results[1], os.path.join(args.out_dir, "excision.gbk"))
     elif Experiment.mode == "inversion":
-        with open(os.path.join(args.out_dir, "inversion.gbk"), "w") as output_handle:
-            SeqIO.write(results[0], output_handle, "genbank")
+        write_genbank(results[0], os.path.join(args.out_dir, "inversion.gbk"))
