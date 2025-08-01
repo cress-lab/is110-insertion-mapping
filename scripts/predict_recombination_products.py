@@ -209,9 +209,9 @@ class bRNAReaction():
         downstream_cut = max(cut_points)
         self.add_partial_sites(self.target_contig, upstream_cut)
         self.add_partial_sites(self.target_contig, downstream_cut)
-        leftovers = (self.target_record[:upstream_cut] 
-                     + self.target_record[downstream_cut:])
-        excised = self.target_record[upstream_cut:downstream_cut]
+        leftovers = (self.target_contig[:upstream_cut] 
+                     + self.target_contig[downstream_cut:])
+        excised = self.target_contig[upstream_cut:downstream_cut]
         # Transfer metadata
         common_prefix = (
             f"excision between {self.target_split_site+1} and "
