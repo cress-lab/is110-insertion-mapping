@@ -10,10 +10,11 @@ import copy
 import os
 
 class BridgeRNAReaction():
-    def __init__(self, brna_path, other_sequence_paths, out_dir):
+    def __init__(self, brna_path, other_sequence_paths, 
+                 annotate_split_features=True):
         self.brna_path = brna_path
         self.other_sequence_paths = other_sequence_paths
-        self.out_dir = out_dir
+        self.annotate_split_features = annotate_split_features
         self._process_brna()
         self._identify_sequences()
 
@@ -64,7 +65,10 @@ class BridgeRNAReaction():
         donor_index = np.where([bool(i) for i in donor_matches])[0].item()
         self.target_strand, self.target_start, self.target_end = target_matches[target_index][0]
         self.donor_strand, self.donor_start, self.donor_end = donor_matches[donor_index][0]
-        print(f"Found target sequence: {sequence_paths[target_index]}\n\tstart: {self.target_start}\n\tend: {self.target_end}")
+
+        self.target_file = os.path.splitext(os.path.basename(sequence_paths[target_index]))[0]
+        
+        print(f"Found target sequence: {self.target_file}\n\tstart: {self.target_start}\n\tend: {self.target_end}")
         self._find_split_sites()
         # Store target contig
         self.target_contig = sequence_records[target_index]
@@ -77,7 +81,6 @@ class BridgeRNAReaction():
             strand=self.target_strand, 
             mode="Target", 
             inplace=True)
-        # self.target_contig = target_contig
         # Mode-specific preprocessing
         if target_index == donor_index:
             self.annotate_site(
@@ -97,7 +100,8 @@ class BridgeRNAReaction():
         else:
             self.mode = "insertion"
             # Store separate donor record for insertions
-            print(f"Found donor sequence: {sequence_paths[donor_index]}")
+            self.donor_file = os.path.splitext(os.path.basename(sequence_paths[donor_index]))[0]
+            print(f"Found donor sequence: {self.donor_file}")
             self.donor_contig = sequence_records[donor_index]
             self.annotate_site(
                 record=self.donor_contig, 
@@ -135,10 +139,11 @@ class BridgeRNAReaction():
             raise ValueError("Invalid mode, no product calculated!")
     
     def calculate_insertion(self):
-        self.add_partial_sites(self.target_contig, self.target_split_site)
-        self.add_partial_sites(self.target_contig, self.target_split_site)
-        self.add_partial_sites(self.donor_contig, self.donor_split_site)
-        self.add_partial_sites(self.donor_contig, self.donor_split_site)
+        if self.annotate_split_features:
+            self.add_partial_sites(self.target_contig, self.target_split_site)
+            self.add_partial_sites(self.target_contig, self.target_split_site)
+            self.add_partial_sites(self.donor_contig, self.donor_split_site)
+            self.add_partial_sites(self.donor_contig, self.donor_split_site)
 
         result = (
             self.target_contig[:self.target_split_site]
@@ -161,8 +166,9 @@ class BridgeRNAReaction():
         cut_points = [self.target_split_site, self.donor_split_site]
         upstream_cut = min(cut_points)
         downstream_cut = max(cut_points)
-        self.add_partial_sites(self.target_contig, upstream_cut)
-        self.add_partial_sites(self.target_contig, downstream_cut)
+        if self.annotate_split_features:
+            self.add_partial_sites(self.target_contig, upstream_cut)
+            self.add_partial_sites(self.target_contig, downstream_cut)
         leftovers = (self.target_contig[:upstream_cut] 
                      + self.target_contig[downstream_cut:])
         excised = self.target_contig[upstream_cut:downstream_cut]
@@ -188,8 +194,9 @@ class BridgeRNAReaction():
         cut_points = [self.target_split_site, self.donor_split_site]
         upstream_cut = min(cut_points)
         downstream_cut = max(cut_points)
-        self.add_partial_sites(self.target_contig, upstream_cut)
-        self.add_partial_sites(self.target_contig, downstream_cut)
+        if self.annotate_split_features:
+            self.add_partial_sites(self.target_contig, upstream_cut)
+            self.add_partial_sites(self.target_contig, downstream_cut)
         inverted_record = (
             self.target_contig[:upstream_cut]
             + self.target_contig[upstream_cut:downstream_cut].reverse_complement()
@@ -267,7 +274,7 @@ class BridgeRNAReaction():
             core_start, core_end = sorted([le_end, re_start])
         else: 
             core_start, core_end = sorted([re_end, le_start])
-        print(mode, " LE: ", le_start, le_end, " RE: ", re_start, re_end, " Strand:", strand, "core:", core_end - core_start)
+        # print(mode, " LE: ", le_start, le_end, " RE: ", re_start, re_end, " Strand:", strand, "core:", core_end - core_start)
         # Annotate the partial sites
         # total_feat = SeqFeature(
         #     location=FeatureLocation(le_start, re_end, strand), 
@@ -349,7 +356,7 @@ class BridgeRNAReaction():
             site = reverse_complement(site)
         part_start = site.index(part)
         part_end = part_start + len(part)
-        print(part_start, part_end, contig_pos, part, site)
+        # print(part_start, part_end, contig_pos, part, site)
         # part_start, part_end = find_matches(part, site, complement_search=False, 
         #                                     return_strand=False)
         part_start, part_end = contig_pos + part_start, contig_pos + part_end
@@ -371,7 +378,7 @@ class BridgeRNAReaction():
         return new_record
 
     @classmethod
-    def _split_feature(cls, feature:SeqFeature, split_site:int):
+    def split_feature(cls, feature:SeqFeature, split_site:int):
         """Splits a sequence feature at a provided split site into an upstream
         and downstream component. 
 
@@ -409,6 +416,7 @@ class BridgeRNAReaction():
         })
         return (upstream_feat, downstream_feat)
     
+    # TODO: add logic to properly split compound location features that overlap origin of circular record
     @classmethod
     def add_partial_sites(cls, record:SeqRecord, cut_site:int, 
                           inplace:bool=True):
@@ -432,15 +440,16 @@ class BridgeRNAReaction():
                 starts_before_cut_site = feature.location.start < cut_site
                 ends_before_cut_site = feature.location.end <= cut_site
                 if starts_before_cut_site & (not ends_before_cut_site):
-                    split_feats = cls._split_feature(feature, cut_site)
+                    split_feats = cls.split_feature(feature, cut_site)
                     split_features.extend(split_feats)
         record.features.extend(split_features)
         if not inplace:
             return record
 
-def write_genbank(record, path):
+def write_genbank(record:SeqRecord, path:str):
     with open(path, "w") as output_handle:
         SeqIO.write(record, output_handle, "genbank")
+        print(f"Saved to {path}")
 
 
 if __name__ == "__main__":
@@ -459,37 +468,19 @@ if __name__ == "__main__":
                         help='Specify one or more additional sequence_records/genomes to ' \
                         'search for target and donor sites.')
 
-    parser.add_argument(
-        "-b",
-        "--brna_path", 
-        help="Path to bRNA plasmid",
-        )
+    parser.add_argument("-b", "--brna_path", help="Path to bRNA plasmid",)
     parser.add_argument('--allow_linear', action='store_true',
                     help='Treat the output product as circular unless this is set.')
-
+    parser.add_argument('--no_split_features', action='store_true',
+                    help='Add new  partial features for any features that overlap the target/donor sites unless this is set.')
     parser.add_argument("-o", "--out_dir", required=True, help="Output directory",)
-
-    # # # Test case
-    # args = parser.parse_args(
-    #     [
-    #         # "--target_contig", "/groups/cress/projects/is110/sequences/SLMQRT/Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk",
-    #         # # "--donor_contig", "/groups/cress/projects/is110/sequences/SLMQRT/monomeric_BAC_for_plate_scrape_13kb.gbk",
-    #         # "--donor_contig", "/groups/cress/projects/efactors/jack/insertion_mapping/misc/W9G3HH_30kbp_BAC_gSES0133.gbk",
-    #         "--brna_path", "../data/sequence_records/P7YMY9_pSES0099.gbk",
-    #         "-o", "../misc/insertion_test", 
-    #         "--other_sequence_records", 
-    # #        "/groups/cress/projects/is110/sequences/SLMQRT/Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk", 
-    # #        "/groups/cress/projects/efactors/jack/insertion_mapping/misc/W9G3HH_30kbp_BAC_gSES0133.gbk",
-    #         "../data/genomes/Manually_Adjusted_Seq_of_HalfKan_Reporter_Strain_SLMQRT_4_dnaSES0085_no_BAC.gbk", 
-    #         "../data/sequence_records/W9G3HH_30kbp_BAC_gSES0133.gbk",
-    #         ])
     args = parser.parse_args()
 
     if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir, exist_ok=True)
-
+    split_features = not args.no_split_features
     Experiment = BridgeRNAReaction(
-        args.brna_path, args.other_sequence_records, args.out_dir
+        args.brna_path, args.other_sequence_records, split_features
     )
     results = Experiment.calculate_product()
     if not args.allow_linear:
@@ -498,11 +489,17 @@ if __name__ == "__main__":
     print(f"Saving results to {args.out_dir}")
     if Experiment.mode == "insertion":
         # write_genbank(Experiment.target_contig, "../misc/insertion_test/genome.gbk")
-        # write_genbank(Experiment.donor_contig, "../misc/insertion_test/insert.gbk")
+        # write_genbank(Experiment.donor_contig, os.path.join(args.out_dir, "insert.gbk"))
         # write_genbank(Experiment.insert, "../misc/insertion_test/insert_oriented.gbk")
-        write_genbank(results[0], os.path.join(args.out_dir, "insertion.gbk"))
+        insertion_handle = f"insertion_{Experiment.donor_file}_into_{Experiment.target_file}.gbk"
+        # print(f"SAVE TO: {outfile}")
+        write_genbank(results[0], os.path.join(args.out_dir, insertion_handle))
     elif Experiment.mode == "excision":
-        write_genbank(results[0], os.path.join(args.out_dir, "leftovers.gbk"))
-        write_genbank(results[1], os.path.join(args.out_dir, "excision.gbk"))
+        # Experiment.target_split_site, Experiment.donor_split_site
+        leftovers_handle = f"{Experiment.target_file}_{Experiment.target_split_site}-{Experiment.donor_split_site}_leftovers.gbk"
+        excision_handle = f"{Experiment.target_file}_{Experiment.target_split_site}-{Experiment.donor_split_site}_excision.gbk"
+        write_genbank(results[0], os.path.join(args.out_dir, leftovers_handle))
+        write_genbank(results[1], os.path.join(args.out_dir, excision_handle))
     elif Experiment.mode == "inversion":
-        write_genbank(results[0], os.path.join(args.out_dir, "inversion.gbk"))
+        inversion_handle = f"inversion_{Experiment.target_file}_{Experiment.target_split_site}-{Experiment.donor_split_site}.gbk"
+        write_genbank(results[0], os.path.join(args.out_dir, inversion_handle))
