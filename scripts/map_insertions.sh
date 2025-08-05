@@ -3,27 +3,82 @@
 # Script to map insertions from a sequencing run by BLASTing the RE of the 
 # insertion sequence.
 # USAGE:
-#   ./map_insertions.sh <fastq path> <genome> <re> <working directory>
-# where fastq path is the path to the sequencing results, genome is the path to 
-# the genome, and re is the path to a fasta with the RE sequence
+#   map_insertions.sh -b brna_plasmid_file.gbk -s file1.gbk [file2.gbk ...] -o /path/to/wk_dir
+# where brna_plasmid_file.gbk is the path to the plasmid with the bRNA 
+# And file1, file2, ... are all other sequences present in the experiment
 
-fastq_path="$1"
-genome_file="$2"
-re_seq="$3"
-wk_dir="${4:-.}"
+# fastq_path="$1"
+# genome_file="$2"
+# re_seq="$3"
+# wk_dir="${4:-.}"
 
-mkdir -p "$wk_dir/blast"
+# Initialize variables
+brna_plasmid_file=""
+other_sequence_files=()
+wk_dir=""
 
-# Unzip the sequencing read file if it's compressed, if not don't do anything
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -b)
+            brna_plasmid_file="$2"
+            shift 2
+            ;;
+        -s)
+            shift
+            while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
+                other_sequence_files+=("$1")
+                shift
+            done
+            ;;
+        -o)
+            wk_dir="$2"
+            shift 2
+            ;;
+        -f)
+            fastq_file="$3"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+# Validate required inputs
+if [[ -z "$brna_plasmid_file" || ${#other_sequence_files[@]} -eq 0 || -z "$wk_dir" || -z "$fastq_file" ]]; then
+    echo "Usage: $0 -b brna_plasmid_file.gbk -s file1.gbk [file2.gbk ...] -o /path/to/wk_dir"
+    exit 1
+fi
+
+mkdir -p "$wk_dir/blast" "$wk_dir/input"
+
+python extract_insertion_re.py \
+    -b "$brna_plasmid_file" \
+    -s "${other_sequence_files[@]}" \
+    -o "$wk_dir/input"
+
+re_file="$wk_dir/input/RE.fasta"
+genome_file="$wk_dir/input/sequences.fasta"
+
+# Store all sequences as a single fasta
+python genbank_to_fasta.py \
+    "$genome_file" \
+    "$brna_plasmid_file" \
+    "${other_sequence_files[@]}"
+
+# PROCESS THE SEQUENCING DATA
+# STORE READS AS A FASTA FILE
 if [[ "$fastq_path" == *.fastq.gz ]]; then
     # Get the base name without .fastq.gz
     sequencing_basename=$(basename "$fastq_path" .fastq.gz)
 
-    # Unzip only if the .fastq doesn't already exist
     if [[ ! -f "${fastq_path%.gz}" ]]; then
         echo "Unzipping $fastq_path..."
-        gunzip -d "$fastq_path"
+        gunzip -c "$fastq_path" | seqtk seq -a > "$wk_dir/blast/$sequencing_basename.fasta"
     else
+        seqtk seq -a "$fastq_path" > "$wk_dir/blast/$sequencing_basename.fasta"
         echo "Unzipped file already exists: ${fastq_path%.gz}"
     fi
 
@@ -35,11 +90,6 @@ else
     exit 1
 fi
 
-# sequencing_basename=$(basename "$fastq_path" .fastq.gz)
-
-# Convert fastq to fasta
-seqtk seq -a "$wk_dir/input/$sequencing_basename.fastq" > "$wk_dir/blast/$sequencing_basename.fasta"
-
 #Header names are too long, make it shorter
 seqkit replace \
   -p '^([^ ]+).*$' \
@@ -48,7 +98,8 @@ seqkit replace \
 > "$wk_dir/blast/$sequencing_basename.idonly.fasta"
 
 #delete temp file
-rm "$wk_dir/blast/$sequencing_basename.fasta"; mv "$wk_dir/blast/$sequencing_basename.idonly.fasta" "$wk_dir/blast/$sequencing_basename.fasta"
+rm "$wk_dir/blast/$sequencing_basename.fasta"
+mv "$wk_dir/blast/$sequencing_basename.idonly.fasta" "$wk_dir/blast/$sequencing_basename.fasta"
 
 #make blast database
 makeblastdb -parse_seqids -in "$wk_dir/blast/$sequencing_basename.fasta" -dbtype nucl -out "$wk_dir/blast/$sequencing_basename"
@@ -56,7 +107,7 @@ makeblastdb -parse_seqids -in "$wk_dir/blast/$sequencing_basename.fasta" -dbtype
 blastn \
 -db "$wk_dir/blast/$sequencing_basename" \
 -task blastn-short \
--query "$re_seq" \
+-query "$re_file" \
 -perc_identity 90 -qcov_hsp_perc 90 \
 -outfmt "6 sseqid sstart send sstrand" \
 -word_size 4 \
