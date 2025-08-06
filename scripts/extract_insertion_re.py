@@ -41,9 +41,9 @@ oriented_donor_seq = (
 
 print(Experiment.donor_strand)
 if Experiment.donor_strand == 1:
-    re = oriented_donor_seq[:args.extract_length]
+    re = oriented_donor_seq[-args.extract_length:]
 else:
-    re = reverse_complement(oriented_donor_seq)[:args.extract_length]
+    re = reverse_complement(oriented_donor_seq)[-args.extract_length:]
 print(f"found RE: {re}")
 header = f"RE from {Experiment.donor_file}"
 
