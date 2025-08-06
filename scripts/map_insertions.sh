@@ -7,15 +7,11 @@
 # where brna_plasmid_file.gbk is the path to the plasmid with the bRNA 
 # And file1, file2, ... are all other sequences present in the experiment
 
-# fastq_path="$1"
-# genome_file="$2"
-# re_seq="$3"
-# wk_dir="${4:-.}"
-
 # Initialize variables
 brna_plasmid_file=""
 other_sequence_files=()
 wk_dir=""
+fastq_path=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -36,7 +32,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -f)
-            fastq_file="$3"
+            fastq_path="$2"
             shift 2
             ;;
         *)
@@ -47,8 +43,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate required inputs
-if [[ -z "$brna_plasmid_file" || ${#other_sequence_files[@]} -eq 0 || -z "$wk_dir" || -z "$fastq_file" ]]; then
-    echo "Usage: $0 -b brna_plasmid_file.gbk -s file1.gbk [file2.gbk ...] -o /path/to/wk_dir"
+if [[ -z "$brna_plasmid_file" || ${#other_sequence_files[@]} -eq 0 || -z "$wk_dir" || -z "$fastq_path" ]]; then
+    echo "Usage: $0 -b brna_plasmid_file.gbk -s file1.gbk [file2.gbk ...] -o /path/to/wk_dir -f /path/to/fastq"
     exit 1
 fi
 
@@ -69,22 +65,15 @@ python genbank_to_fasta.py \
     "${other_sequence_files[@]}"
 
 # PROCESS THE SEQUENCING DATA
-# STORE READS AS A FASTA FILE
 if [[ "$fastq_path" == *.fastq.gz ]]; then
     # Get the base name without .fastq.gz
     sequencing_basename=$(basename "$fastq_path" .fastq.gz)
-
-    if [[ ! -f "${fastq_path%.gz}" ]]; then
-        echo "Unzipping $fastq_path..."
-        gunzip -c "$fastq_path" | seqtk seq -a > "$wk_dir/blast/$sequencing_basename.fasta"
-    else
-        seqtk seq -a "$fastq_path" > "$wk_dir/blast/$sequencing_basename.fasta"
-        echo "Unzipped file already exists: ${fastq_path%.gz}"
-    fi
+    gunzip -c "$fastq_path" | seqtk seq -a > "$wk_dir/blast/$sequencing_basename.fasta"
 
 elif [[ "$fastq_path" == *.fastq ]]; then
     # Get the base name without .fastq
     sequencing_basename=$(basename "$fastq_path" .fastq)
+    seqtk seq -a "$fastq_path" > "$wk_dir/blast/$sequencing_basename.fasta"
 else
     echo "Error: Unsupported file extension. Expected .fastq or .fastq.gz"
     exit 1
@@ -116,7 +105,7 @@ blastn \
 -out "$wk_dir/blast/RE_blast.tsv"
 
 #Extract the downstream of RE from all RE-contain contigs
-python scripts/RE_blast_contig_fetch.py \
+python RE_blast_contig_fetch.py \
   -f "$wk_dir/blast/$sequencing_basename.fasta" \
   -t "$wk_dir/blast/RE_blast.tsv" \
   -s 200 \
