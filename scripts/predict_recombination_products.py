@@ -464,7 +464,7 @@ if __name__ == "__main__":
     # NOTE: invariant AA/TT in the RDG
     # NOTE: the cores will be found as the 2 cores in the target guide
     # NOTE: it's fair to expect *FOR NOW* that cores are the same for a given recombination
-    parser.add_argument('-s', '--other_sequence_records', nargs='+', 
+    parser.add_argument('-s', '--other_sequence_records', nargs='+', default=[],
                         help='Specify one or more additional sequence_records/genomes to ' \
                         'search for target and donor sites.')
 
