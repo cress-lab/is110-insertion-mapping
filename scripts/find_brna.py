@@ -26,37 +26,49 @@ def find_brna_sequence(record:SeqRecord):
         r'[ACGT]{2}TT[ACGT]{7}'
         r'TGGTTTCACT'
     )
-    # search_strand = "+"
-    # # print(f"Searching for bRNA on ({search_strand}) strand...")
-    # match = pattern.search(str(record.seq))
-    # if not match:
-    #     search_strand = "-"
-    #     # print(f"Searching for bRNA on ({search_strand}) strand...")
-    #     match = pattern.search(str(record.seq.reverse_complement()))
-    # if match:
-    #     brna_seq = str(match.group())
-    #     print(f"Found bRNA on ({search_strand}) strand: {brna_seq}")
-    #     return brna_seq
-    # else:
-    #     raise ValueError("No bRNA found!")
     sequence = str(record.seq)
     seq_len = len(sequence)
-    circular_sequence = sequence + sequence  # simulate circular genome
-
+    BRNA_LENGTH = 177
+    L = len(sequence)
+    # Allow detection of bRNAs that span the origin
+    circular_sequence = sequence + sequence[:BRNA_LENGTH] 
+    matches, match_pos, match_strands = [], [], []
     # Search forward strand
-    match = pattern.search(circular_sequence)
-    if match and match.start() < seq_len:
-        print(f"Found bRNA on (+) strand: {match.group()}")
-        return match.group()
+    matches_fwd = [match for match in pattern.finditer(circular_sequence)]
+    for match in matches_fwd:
+        if match and match.start() < seq_len:
+            # print(f"Found bRNA on (+) strand: {match.group()}")
+            matches.append(match.group())
+            match_pos.append(match.start())
+            match_strands.append("+")
+            # return match.group()
 
     # Search reverse strand
     rev_sequence = str(record.seq.reverse_complement())
-    circular_rev = rev_sequence + rev_sequence
-    match = pattern.search(circular_rev)
-    if match and match.start() < seq_len:
-        print(f"Found bRNA on (-) strand: {match.group()}")
-        return match.group()
-    raise ValueError("No bRNA found!")
+    circular_rev = rev_sequence + rev_sequence[:BRNA_LENGTH]
+    matches_rev = [match for match in pattern.finditer(circular_rev)]
+    for match in matches_rev:
+        if match and match.start() < seq_len:
+            # print(f"Found bRNA on (-) strand: {match.group()}")
+            matches.append(match.group())
+            match_pos.append(L - match.start())
+            match_strands.append("-")
+            # return match.group()
+    if len(matches) == 1:
+        brna_seq = matches[0]
+        print(f"Found bRNA on ({match_strands[0]}) strand, starting at {match_pos[0]}: {brna_seq}")
+        return brna_seq
+    elif len(matches) > 1:
+        print("Multiple bRNAs found, choose one:")
+        for idx, brna in enumerate(zip(matches, match_pos, match_strands)):
+            target_site = find_target_site(brna[0], verbose=False)[0]
+            donor_site = find_donor_site(brna[0], verbose=False)[0]
+            print(f"\t({idx + 1}) ({brna[2]}) strand starting at {brna[1]}; Target site = {target_site}, Donor site = {donor_site} — {brna[0]}")
+        BridgeToUse = int(input("Pick integer of one bRNA to use: "))
+        brna_seq = matches[BridgeToUse - 1]
+        return brna_seq
+    else:
+        raise ValueError("No bRNA found!")
 
 
 
@@ -83,29 +95,31 @@ def find_donor_guide(brna_sequence:str):
     return ldg, rdg_1, rdg_2
 
 
-def find_target_site(brna_sequence):
+def find_target_site(brna_sequence, verbose=True):
     ltg, rtg = find_target_guide(brna_sequence)
-    print(f"LTG: {ltg}\nRTG: {rtg}")
     # Find target site
     lt = ltg[:-2]
     target_core = ltg[-2:]
     rt = reverse_complement(rtg)[2:]
     target_site = lt + target_core + rt
-    print(f"Target site: {target_site}\n"
-          f"    LT: {lt} target core: {target_core} RT: {rt}")
+    if verbose:
+        print(f"LTG: {ltg}\nRTG: {rtg}")
+        print(f"Target site: {target_site}\n"
+            f"    LT: {lt} target core: {target_core} RT: {rt}")
     return target_site, lt, target_core, rt
 
 
-def find_donor_site(brna_sequence):
+def find_donor_site(brna_sequence, verbose=True):
     ldg, rdg_1, rdg_2 = find_donor_guide(brna_sequence)
-    print(f"LDG: {ldg}\nRDG1: {rdg_1}\nRDG2: {rdg_2}")
     ld = ldg[:-1]
     core_plus_rdg = (reverse_complement(rdg_1) + reverse_complement(rdg_2))
     donor_core = core_plus_rdg[:2]
     rd = core_plus_rdg[2:]
     donor_site = ld + donor_core + rd
-    print(f"Donor site: {donor_site}\n"
-          f"    LD: {ld} donor core: {donor_core} RD: {rd}")
+    if verbose:
+        print(f"LDG: {ldg}\nRDG1: {rdg_1}\nRDG2: {rdg_2}")
+        print(f"Donor site: {donor_site}\n"
+            f"    LD: {ld} donor core: {donor_core} RD: {rd}")
     return donor_site, ld, donor_core, rd
 
 
@@ -136,25 +150,6 @@ def main():
     target_site, lt, target_core, rt = target
     donor_site, ld, donor_core, rd = donor
     print(f"Found:\tTarget site: {target_site}\n\tDonor site: {donor_site}")
-    # # DEV
-    # donor_record = SeqIO.read(
-    #     # "/groups/cress/projects/efactors/jack/insertion_mapping/misc/W9G3HH_30kbp BAC_gSES0133.gbk",
-    #     "/groups/cress/projects/is110/sequences/SLMQRT/monomeric_BAC_for_plate_scrape_13kb.gbk",
-    #     "genbank"
-    # )
-    # working_seq = donor_record.seq
-    # donor_pos = working_seq.find(donor_site)
-    # if donor_pos == -1:
-    #     working_seq = donor_record.seq.reverse_complement()
-    #     donor_pos = working_seq.find(donor_site)
-    # re_end = donor_pos+9
-    # re_start = re_end-200
-    # print(working_seq[re_start:re_end])
-    # print(reverse_complement(working_seq[re_start:re_end]))
-    # # print(type(donor_record.seq))
-    # # print(donor_pos)
-    # # print(donor_record.features)
-    # # print(donor_site[9:])
 
 if __name__ == "__main__":
     main()
