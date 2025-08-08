@@ -20,6 +20,7 @@ class BridgeRNAReaction():
 
     def _process_brna(self):
         # Determines target and donor sites from bRNA in bRNA plasmid
+        # NOTE: currently assumes there's only one sequence record in brna_plasmid
         self.brna_plasmid_record = SeqIO.read(self.brna_path, "genbank")
         target, donor = find_brna.find_target_donor_sites(self.brna_plasmid_record)
         self.target_site, self.lt, self.target_core, self.rt = target
@@ -48,10 +49,17 @@ class BridgeRNAReaction():
         
     def _identify_sequences(self):
         # Read other sequence records
-        sequence_paths = [self.brna_path] + self.other_sequence_paths
-        other_sequence_records = [
-            SeqIO.read(file, "genbank") for file in self.other_sequence_paths
-            ]
+        sequence_paths = [self.brna_path]
+        # Store all sequence records in additional sequence files
+        other_sequence_records = []
+        for filepath in self.other_sequence_paths:
+            records = SeqIO.parse(filepath, "genbank")
+            for record in records:
+                    other_sequence_records.append(record)
+                    sequence_paths.append(filepath)
+        # other_sequence_records = [
+        #     SeqIO.read(file, "genbank") for file in self.other_sequence_paths
+        #     ]
         sequence_records = [self.brna_plasmid_record] + other_sequence_records
         seqs = [str(record.seq) for record in sequence_records]
         # Search all sequence records for target and donor sites
@@ -467,7 +475,6 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--other_sequence_records', nargs='+', default=[],
                         help='Specify one or more additional sequence_records/genomes to ' \
                         'search for target and donor sites.')
-
     parser.add_argument("-b", "--brna_path", help="Path to bRNA plasmid",)
     parser.add_argument('--allow_linear', action='store_true',
                     help='Treat the output product as circular unless this is set.')
