@@ -4,11 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import seaborn as sns
-import argparse
+import sys
 import os
 from collections import Counter
 
-def plot_insertions(counts_df, total_genome_length, target_coordinate=None, mode="mb", ax=None,):
+def plot_insertions(counts_df, total_genome_length, mode="mb", ax=None,):
     if ax is None:
         fig, ax = plt.subplots(figsize=(16, 6))
     count_df = counts_df.copy()
@@ -55,7 +55,7 @@ def plot_insertions(counts_df, total_genome_length, target_coordinate=None, mode
         ax.set_xlim(left=0, right=total_genome_length)
     else:
         ax.set_xlim(left=0)
-    return ax
+    return fig, ax
 
 def plot_triangle(target_coordinate, ax):
     # Plot a red triangle at the target site
@@ -76,56 +76,17 @@ def plot_triangle(target_coordinate, ax):
     )
     ax.add_patch(triangle)
 
-def main():
-    # Set a professional style for the plots.
-    sns.set_style("whitegrid")
 
-    # --- Step 2: Parameter Configuration ---
-    # Specify the path to the SAM/BAM file for analysis.
-
-    parser = argparse.ArgumentParser(
-        description="Script to plot insertion map results against a reference genome"
-    )
-    parser.add_argument(
-        "-d", "--wk_dir", required=True,
-        help="Working directory path. Must contain a file called aligned_contigs.bam"
-    )
-    # parser.add_argument(
-    #     "-o", "--out_dir", required=True,
-    #     help="Directory to write the output plots to"
-    # )
-    parser.add_argument(
-        "-t", "--title", required=False,
-        help="Title for plot"
-    )
-    parser.add_argument(
-        "-x", "--target_coordinate", required=False, type=int,
-        help="Target coordinate for integrations in bp"
-    )
-    parser.add_argument(
-        "-w", "--zoom_window_size", required=False, type=int, default=100,
-        help="If target coordinate provided: window size for additional zoomed in plot around target coordinate"
-    )
-    parser.add_argument(
-        "--on_target_threshold", required=False, type=int, default=10,
-        help="If target coordinate provided: how many bp away from target site on either side to still consider as on target"
-    )
-    parser.add_argument(
-        "--plot_coverage",
-        action="store_true",
-        help="Include this flag to enable coverage plotting. Requires a file called raw_reads_coverage.tsv in wk_dir"
-    )
-
-    args = parser.parse_args()
-    alignment_file = os.path.join(args.wk_dir, "aligned_contigs.bam")
+def parse_bam(wk_dir, title=""):
+    alignment_file = os.path.join(wk_dir, "aligned_contigs.bam")
     assert os.path.exists(alignment_file), "Working dir must contain aligned_contigs.bam!"
-    out_dir = os.path.join(args.wk_dir, "plots")
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir, exist_ok=True)
+    # out_dir = os.path.join(wk_dir, "plots")
+    # if not os.path.exists(out_dir):
+    #     os.makedirs(out_dir, exist_ok=True)
 
     # Set default title if not provided
-    if not args.title:
-        args.title = f"Insertion map for {alignment_file}"
+    if not title:
+        title = f"Insertion map for {alignment_file}"
 
     print(f"Step 2: Set alignment file to '{alignment_file}'")
 
@@ -140,14 +101,16 @@ def main():
         "supplementary": 0,
     })
     insertion_sites, reference_names = [], []
-    total_genome_length = 0
+    # total_genome_length = 0
 
     # Open the SAM/BAM file once to process reads and get header info.
     with pysam.AlignmentFile(alignment_file, "r") as samfile:
         # Get total genome length from the SAM/BAM header.
         if samfile.header.lengths:
-            total_genome_length = sum(samfile.header.lengths)
-            print(f"Total genome length from header: {total_genome_length:,} bp")
+            total_genome_lengths = dict(zip(samfile.header.references, samfile.header.lengths))
+            print(f"Total genome lengths from header:")
+            for genome, length in total_genome_lengths.items():
+                print(f"\t{genome}: {length:,} bp")
 
         # Process all aligned reads in the file.
         for read in samfile.fetch(until_eof=True):
@@ -195,33 +158,60 @@ def main():
     counts_df['position_mb'] = counts_df['position'] / 1_000_000
     # NOTE: The log10_count column is calculated but not used in the plot, so it's removed for clarity.
     print("  - Data aggregation complete.")
+    return counts_df, positions_df, total_genome_lengths, title
 
-    # --- Step 5: Visualization (Labeling Peaks) ---
-    print("\nStep 5: Creating genome-wide plot...")
+
+# def main():
+if __name__ == "__main__":
+    # Set a professional style for the plots.
+    sns.set_style("whitegrid")
+
+    wk_dir = sys.argv[1]
+    reference_genome_name = sys.argv[2]
+    target_coordinate = int(sys.argv[3]) # 3843421
+
+    out_dir = os.path.join(wk_dir, "plots")
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+
+    counts_df, positions_df, total_genome_lengths, title = parse_bam(wk_dir)
+    print("\nStep 5: Creating genome-wide plots...")
     ##### Make the high level insertion map
-    ax = plot_insertions(counts_df, total_genome_length, target_coordinate=args.target_coordinate, mode="mb")
-    plot_triangle(args.target_coordinate / 1_000_000, ax)
-    ax.set_title(args.title, fontsize=16)
-    ax.set_xlabel("Position in Genome (Mb)", fontsize=12)
-    plt.savefig(os.path.join(out_dir, "alignment_plot.png"), dpi=300)
-    ##### If you want to plot coverage below insertion map, this will do that
-    if args.plot_coverage:
-        print("Plotting insertion map with coverage...")
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), sharex=True, gridspec_kw={'height_ratios': [4, 1]})
-        plot_insertions(counts_df, total_genome_length, target_coordinate=args.target_coordinate, mode="mb", ax=ax1)
-        plot_triangle(args.target_coordinate / 1_000_000, ax1) # Plot triangle at target site
 
-        # Read dataframe of whole genome coverage
-        cov_df = pd.read_csv((os.path.join(args.wk_dir, "raw_reads_coverage.tsv")), sep="\t", header=None)
-        cov_df.columns=["chrom", "pos", "depth"]
-        cov_df["pos_mb"] = cov_df["pos"] / 1_000_000
+    for reference in counts_df["reference"].unique():
+
+        fig, ax = plot_insertions(
+            counts_df[counts_df["reference"]==reference], 
+            total_genome_lengths[reference], 
+            mode="b")
+        if reference == reference_genome_name:
+            # print('add triangle')
+            plot_triangle(target_coordinate, ax)
+        # if not title:
+        title = f"Insertion map for {reference}"
+        ax.set_title(title, fontsize=16)
+        ax.set_xlabel("Position in Genome (b)", fontsize=12)
+        fig.savefig(os.path.join(out_dir, f"{reference}_insertion_map.png"))
+        # plt.title()
+        # plt.show()
+
+    cov_df = pd.read_csv((os.path.join(wk_dir, "raw_reads_coverage.tsv")), sep="\t", header=None)
+    cov_df.columns=["chrom", "pos", "depth"]
+    cov_df["pos_mb"] = cov_df["pos"] / 1_000_000
+    # Subset to only reference genome
+    cov_df_ref = cov_df[cov_df["chrom"]==reference_genome_name]
+
+
+    for contig in cov_df["chrom"].unique():
+        cov_df_contig = cov_df[cov_df["chrom"]==contig]
         # Plot coverage below insetion map
-        ax2.fill_between(cov_df['pos_mb'], cov_df['depth'], color='royalblue')
-        ax2.set_ylabel("Read Count", fontsize=12)
-        ax2.set_xlabel("Position in Genome (Mb)", fontsize=12)
-        ax2.set_ylim(bottom=0)
-        ax2.set_xlim(cov_df["pos_mb"].min(), cov_df["pos_mb"].max())
-        ax2.tick_params(
+        fig, ax = plt.subplots(figsize=(8,2))
+        ax.fill_between(cov_df_contig['pos_mb'], cov_df_contig['depth'], color='royalblue')
+        ax.set_ylabel("Read Count", fontsize=12)
+        ax.set_xlabel("Position in Genome (Mb)", fontsize=12)
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(cov_df_contig["pos_mb"].min(), cov_df_contig["pos_mb"].max())
+        ax.tick_params(
             direction='out',
             length=4,
             width=1,
@@ -229,54 +219,10 @@ def main():
             grid_color='none',
             grid_alpha=0.5
         )
-        sns.despine(ax=ax2)
+        sns.despine(ax=ax)
+        ax.set_title(contig)
 
         # --- Layout adjustment ---
         plt.tight_layout()
-        plt.subplots_adjust(hspace=0.1)  # Increase vertical space between plots
-        plt.suptitle(args.title, fontsize=16, y=1.03)
-        fig.savefig(os.path.join(out_dir, "alignment_plot_with_coverage.png"), dpi=300)
-    # If target coordinate provided: save an additional zoomed in plot around 
-    # that site AND save a pie chart of on target % (on target is defined as 
-    # give or take args.on_target_threshold from target site [defaults to 10bp])
-    
-    if args.target_coordinate:
-        print("Plotting zoomed in insertion map...")
-        # PLOT A ZOOMED IN VERSION OF THE INSERTION MAP
-        w = args.zoom_window_size / 2
-        xmin, xmax = args.target_coordinate - w, args.target_coordinate + w
-
-        ax = plot_insertions(
-            counts_df[(counts_df["position"] >= xmin) & (counts_df["position"] <= xmax)], 
-            total_genome_length,
-            target_coordinate=args.target_coordinate, mode="b")
-        plt.xlim(xmin, xmax)
-        plot_triangle(args.target_coordinate, ax)
-        plt.title(args.title, fontsize=16)
-        plt.tight_layout()
-        plt.savefig(os.path.join(out_dir, "alignment_plot_zoomed.png"), dpi=300)
-
-        # PLOT A PIE CHART SHOWING % OF ON TARGET INTEGRATIONS
-        print("Plotting pie chart...")
-        def on_target_mapper(pos):
-            if (pos >= (args.target_coordinate - args.on_target_threshold)) and (pos <= args.target_coordinate + args.on_target_threshold ):
-                return True
-            else:
-                return False
-
-        counts_df["on_target"] = counts_df["position"].map(on_target_mapper)
-        counts = counts_df.groupby('on_target')['count'].sum()
-        # Plot pie chart
-        plt.figure(figsize=(6, 6))
-        counts.plot.pie(
-            autopct='%1.1f%%',
-            startangle=90,
-            labels=['Off Target', 'On Target'],  # Map False to Off, True to On
-            colors=['lightcoral', 'lightgreen'],
-            # wedgeprops={'edgecolor': 'black'}
-        )
-        plt.ylabel("")
-        plt.savefig(os.path.join(out_dir, "on_target_pie_chart.png"), dpi=300)
-
-if __name__ == "__main__":
-    main()
+        fig.savefig(os.path.join(out_dir, f"{contig}_coverage.png"))
+        # plt.show()
