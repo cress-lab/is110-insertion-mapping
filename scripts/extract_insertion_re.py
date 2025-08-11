@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(
     "and donor contigs, left and right ends of target and donor sites, and "
     "cores of each. ")
 )
-parser.add_argument('-s', '--other_sequence_records', nargs='+', 
+parser.add_argument('-s', '--other_sequence_records', nargs='+', default=[],
                     help='Specify one or more additional sequence_records/genomes to ' \
                     'search for target and donor sites.')
 parser.add_argument("-b", "--brna_path", help="Path to bRNA plasmid",)
