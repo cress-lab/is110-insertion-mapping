@@ -3,7 +3,7 @@
 # Script to map insertions from a sequencing run by BLASTing the RE of the 
 # insertion sequence.
 # USAGE:
-#   map_insertions.sh -b brna_plasmid_file.gbk -s file1.gbk [file2.gbk ...] -o /path/to/wk_dir
+#   map_insertions.sh -b brna_plasmid_file.gbk -s file1.gbk [file2.gbk ...] -o /path/to/wk_dir -f /path/to/fastq
 # where brna_plasmid_file.gbk is the path to the plasmid with the bRNA 
 # And file1, file2, ... are all other sequences present in the experiment
 
@@ -102,6 +102,7 @@ blastn \
 -word_size 4 \
 -soft_masking false \
 -dust no \
+-max_target_seqs 1000000 \
 -out "$wk_dir/blast/RE_blast.tsv"
 
 #Extract the downstream of RE from all RE-contain contigs
