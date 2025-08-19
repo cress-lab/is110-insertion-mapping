@@ -109,8 +109,8 @@ blastn \
 python RE_blast_contig_fetch.py \
   -f "$wk_dir/blast/$sequencing_basename.fasta" \
   -t "$wk_dir/blast/RE_blast.tsv" \
-  -s 200 \
   -o "$wk_dir/RE_contain_contigs.fasta"
+#   -s 200 \
 
 echo "Mapping RE onto reference genome"
 minimap2 -t 48 -ax map-ont "$genome_file" "$wk_dir/RE_contain_contigs.fasta" | samtools view -bS | samtools sort -o "$wk_dir/aligned_contigs.bam" - && samtools index "$wk_dir/aligned_contigs.bam"
