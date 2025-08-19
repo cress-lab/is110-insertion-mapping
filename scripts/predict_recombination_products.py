@@ -68,17 +68,14 @@ class BridgeRNAReaction():
         donor_matches = [
             self.find_matches(self.donor_site, i) for i in seqs]
         self._verify_unique_sites(target_matches, donor_matches)
-        # Determine rearrangement mode
         target_index = np.where([bool(i) for i in target_matches])[0].item()
         donor_index = np.where([bool(i) for i in donor_matches])[0].item()
         self.target_strand, self.target_start, self.target_end = target_matches[target_index][0]
         self.donor_strand, self.donor_start, self.donor_end = donor_matches[donor_index][0]
-
-        self.target_file = os.path.splitext(os.path.basename(sequence_paths[target_index]))[0]
-        
-        print(f"Found target sequence: {self.target_file}\n\tstart: {self.target_start}\n\tend: {self.target_end}")
-        self._find_split_sites()
         # Store target contig
+        self.target_file = os.path.splitext(os.path.basename(sequence_paths[target_index]))[0]
+        print(f"Found target sequence: {self.target_file}\n\tstart: {self.target_start}\n\tend: {self.target_end}\n\tstrand: {self.target_strand}")
+        self._find_split_sites()
         self.target_contig = sequence_records[target_index]
         self.annotate_site(
             record=self.target_contig, 
@@ -89,7 +86,7 @@ class BridgeRNAReaction():
             strand=self.target_strand, 
             mode="Target", 
             inplace=True)
-        # Mode-specific preprocessing
+        # Determine rearrangement mode
         if target_index == donor_index:
             self.annotate_site(
                 record=self.target_contig, 
@@ -109,7 +106,7 @@ class BridgeRNAReaction():
             self.mode = "insertion"
             # Store separate donor record for insertions
             self.donor_file = os.path.splitext(os.path.basename(sequence_paths[donor_index]))[0]
-            print(f"Found donor sequence: {self.donor_file}")
+            print(f"Found donor sequence: {self.donor_file}\n\tstrand: {self.donor_strand}")
             self.donor_contig = sequence_records[donor_index]
             self.annotate_site(
                 record=self.donor_contig, 
@@ -121,6 +118,15 @@ class BridgeRNAReaction():
                 mode="Donor", 
                 inplace=True
                 )
+            # Make sure donor and target are in the same orientation
+            if self.donor_strand != self.target_strand:
+                print("Reverse complementing donor contig...")
+                self.donor_contig = reverse_complement_record(self.donor_contig)
+                donor_length = len(self.donor_contig.seq)
+                self.donor_split_site = donor_length - self.donor_split_site
+                self.donor_start = donor_length - self.donor_start
+                self.donor_end = donor_length - self.donor_end
+                self.donor_strand = -self.donor_strand
 
     def _find_split_sites(self):
         # Store split sites
@@ -454,10 +460,23 @@ class BridgeRNAReaction():
         if not inplace:
             return record
 
+
 def write_genbank(record:SeqRecord, path:str):
     with open(path, "w") as output_handle:
         SeqIO.write(record, output_handle, "genbank")
         print(f"Saved to {path}")
+
+
+def reverse_complement_record(record:SeqRecord):
+    # Reverse complement the sequence and features
+    rev_record = record.reverse_complement()
+    # Manually transfer metadata
+    rev_record.id = record.id
+    rev_record.name = record.name
+    rev_record.description = record.description
+    rev_record.dbxrefs = record.dbxrefs
+    rev_record.annotations = record.annotations
+    return rev_record
 
 
 if __name__ == "__main__":
@@ -496,7 +515,7 @@ if __name__ == "__main__":
     print(f"Saving results to {args.out_dir}")
     if Experiment.mode == "insertion":
         # write_genbank(Experiment.target_contig, "../misc/insertion_test/genome.gbk")
-        # write_genbank(Experiment.donor_contig, os.path.join(args.out_dir, "insert.gbk"))
+        write_genbank(Experiment.donor_contig, os.path.join(args.out_dir, "insert.gbk"))
         # write_genbank(Experiment.insert, "../misc/insertion_test/insert_oriented.gbk")
         insertion_handle = f"insertion_{Experiment.donor_file}_into_{Experiment.target_file}.gbk"
         # print(f"SAVE TO: {outfile}")
