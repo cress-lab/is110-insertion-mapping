@@ -11,10 +11,11 @@ import os
 
 class BridgeRNAReaction():
     def __init__(self, brna_path, other_sequence_paths, 
-                 annotate_split_features=True):
+                 annotate_split_features=True, verify_unique_target=True):
         self.brna_path = brna_path
         self.other_sequence_paths = other_sequence_paths
         self.annotate_split_features = annotate_split_features
+        self.verify_unique_target = verify_unique_target
         self._process_brna()
         self._identify_sequences()
 
@@ -28,24 +29,33 @@ class BridgeRNAReaction():
         print(f"Using:\tTarget site: {self.target_site}\n\tDonor site: {self.donor_site}")
 
     # TODO: more descriptive error messages
-    def _verify_unique_sites(self, target_matches, donor_matches):
-        unique_donor_plasmid = len([i for i in donor_matches if i]) == 1
-        unique_donor_site = sum([len(i) for i in donor_matches]) == 1
-        unique_target_plasmid = len([i for i in target_matches if i]) == 1
-        unique_target_site = sum([len(i) for i in target_matches]) == 1
-        if not unique_donor_plasmid:
-            raise ValueError(f"Expected exactly one donor plasmid match, but found {len(donor_matches)}.")
+    # def _verify_unique_donor(self, target_matches, donor_matches):
+    #     unique_donor_plasmid = len([i for i in donor_matches if i]) == 1
+    #     unique_donor_site = sum([len(i) for i in donor_matches]) == 1
+    #     if not unique_donor_plasmid:
+    #         raise ValueError(f"Expected exactly one donor plasmid match, but found {len(donor_matches)}.")
 
-        if not unique_donor_site:
-            total_donor_sites = sum(len(i) for i in donor_matches)
-            raise ValueError(f"Expected exactly one donor site match, but found {total_donor_sites} total.")
+    #     if not unique_donor_site:
+    #         total_donor_sites = sum(len(i) for i in donor_matches)
+    #         raise ValueError(f"Expected exactly one donor site match, but found {total_donor_sites} total.")
 
-        if not unique_target_plasmid:
-            raise ValueError(f"Expected exactly one target plasmid match, but found {len(target_matches)}.")
+    #     unique_target_plasmid = len([i for i in target_matches if i]) == 1
+    #     unique_target_site = sum([len(i) for i in target_matches]) == 1
+    #     if not unique_target_plasmid:
+    #         raise ValueError(f"Expected exactly one target plasmid match, but found {len(target_matches)}.")
 
-        if not unique_target_site:
-            total_target_sites = sum(len(i) for i in target_matches)
-            raise ValueError(f"Expected exactly one target site match, but found {total_target_sites} total.")
+    #     if not unique_target_site:
+    #         total_target_sites = sum(len(i) for i in target_matches)
+    #         raise ValueError(f"Expected exactly one target site match, but found {total_target_sites} total.")
+    def _verify_unique_site(self, matches, mode):
+        unique_plasmid = len([i for i in matches if i]) == 1
+        unique_site = sum([len(i) for i in matches]) == 1
+        if not unique_plasmid:
+            raise ValueError(f"Expected exactly one {mode} plasmid match, but found {len(matches)}.")
+
+        if not unique_site:
+            total_sites = sum(len(i) for i in matches)
+            raise ValueError(f"Expected exactly one {mode} site match, but found {total_sites} total.")
         
     def _identify_sequences(self):
         # Read other sequence records
@@ -67,7 +77,9 @@ class BridgeRNAReaction():
             self.find_matches(self.target_site, i) for i in seqs]
         donor_matches = [
             self.find_matches(self.donor_site, i) for i in seqs]
-        self._verify_unique_sites(target_matches, donor_matches)
+        if self.verify_unique_target:
+            self._verify_unique_site(target_matches, "target")
+        self._verify_unique_site(donor_matches, "donor")
         target_index = np.where([bool(i) for i in target_matches])[0].item()
         donor_index = np.where([bool(i) for i in donor_matches])[0].item()
         self.target_strand, self.target_start, self.target_end = target_matches[target_index][0]
