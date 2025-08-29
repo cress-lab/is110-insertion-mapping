@@ -29,7 +29,7 @@ parser.add_argument("-o", "--out_dir", default=".", help="Output directory",)
 args = parser.parse_args()
 
 Experiment = BridgeRNAReaction(
-        args.brna_path, args.other_sequence_records
+        args.brna_path, args.other_sequence_records, verify_unique_target=False
     )
 NotInsertionMessage = f"Provided set of plasmids was expected to be for an insertion reaction, got {Experiment.mode} instead"
 assert Experiment.mode == "insertion", NotInsertionMessage
