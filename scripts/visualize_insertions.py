@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     wk_dir = sys.argv[1]
     reference_genome_name = sys.argv[2]
-    target_coordinate = int(sys.argv[3]) # 3843421
+    target_coordinate = int(sys.argv[3]) if len(sys.argv) == 4 else None # 3843421
 
     out_dir = os.path.join(wk_dir, "plots")
     if not os.path.exists(out_dir):
@@ -184,9 +184,9 @@ if __name__ == "__main__":
             counts_df[counts_df["reference"]==reference], 
             total_genome_lengths[reference], 
             mode="b")
-        if reference == reference_genome_name:
-            # print('add triangle')
-            plot_triangle(target_coordinate, ax)
+        if target_coordinate is not None:
+            if reference == reference_genome_name:
+                plot_triangle(target_coordinate, ax)
         # if not title:
         title = f"Insertion map for {reference}"
         ax.set_title(title, fontsize=16)
