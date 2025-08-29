@@ -144,12 +144,12 @@ def main():
     args = parser.parse_args()
     # args.brna_plasmid = "/groups/cress/projects/is110/sequences/SLMQRT/P7YMY9_pSES0099.gbk"
     print(f"Searching {args.brna_plasmid} for bRNA...")
-    brna_plasmid_record = SeqIO.read(args.brna_plasmid, "genbank")
-
-    target, donor = find_target_donor_sites(brna_plasmid_record)
-    target_site, lt, target_core, rt = target
-    donor_site, ld, donor_core, rd = donor
-    print(f"Found:\tTarget site: {target_site}\n\tDonor site: {donor_site}")
+    brna_plasmid_records = SeqIO.parse(args.brna_plasmid, "genbank")
+    for brna_plasmid_record in brna_plasmid_records:
+        target, donor = find_target_donor_sites(brna_plasmid_record)
+        target_site, lt, target_core, rt = target
+        donor_site, ld, donor_core, rd = donor
+        print(f"{brna_plasmid_record.id}\nFound:\tTarget site: {target_site}\n\tDonor site: {donor_site}")
 
 if __name__ == "__main__":
     main()
