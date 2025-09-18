@@ -26,6 +26,7 @@ parser.add_argument("-n", "--extract_length",
                     type=int, default=200,
                     help="Number of nucleotides to extract from RE. Defaults to 200",)
 parser.add_argument("-o", "--out_dir", default=".", help="Output directory",)
+parser.add_argument("-m", "--mode", default="R", choices=["R", "L"],help="Which end to extract",)
 args = parser.parse_args()
 
 Experiment = BridgeRNAReaction(
@@ -41,12 +42,19 @@ oriented_donor_seq = (
 
 print(Experiment.donor_strand)
 if Experiment.donor_strand == 1:
+    le = oriented_donor_seq[:args.extract_length]
     re = oriented_donor_seq[-args.extract_length:]
 else:
+    le = reverse_complement(oriented_donor_seq)[:args.extract_length]
     re = reverse_complement(oriented_donor_seq)[-args.extract_length:]
-print(f"found RE: {re}")
-header = f"RE from {Experiment.donor_file}"
+if args.mode == "R":
+    end = re
+elif args.mode == "L":
+    end = le
 
-record = SeqIO.SeqRecord(id=header, description="", seq=re)
-with open(join(args.out_dir, "RE.fasta"), "w") as file:
+print(f"found {args.mode}E: {end}")
+header = f"{args.mode}E from {Experiment.donor_file}"
+
+record = SeqIO.SeqRecord(id=header, description="", seq=end)
+with open(join(args.out_dir, f"{args.mode}E.fasta"), "w") as file:
     SeqIO.write(record, file, "fasta")
