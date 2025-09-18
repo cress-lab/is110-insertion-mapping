@@ -50,7 +50,7 @@ fi
 
 mkdir -p "$wk_dir/blast" "$wk_dir/input"
 
-python extract_insertion_re.py \
+python extract_insertion_end.py \
     -b "$brna_plasmid_file" \
     -s "${other_sequence_files[@]}" \
     -o "$wk_dir/input"
@@ -65,52 +65,53 @@ python genbank_to_fasta.py \
     "${other_sequence_files[@]}"
 
 # PROCESS THE SEQUENCING DATA
-if [[ "$fastq_path" == *.fastq.gz ]]; then
-    # Get the base name without .fastq.gz
-    sequencing_basename=$(basename "$fastq_path" .fastq.gz)
-    gunzip -c "$fastq_path" | seqtk seq -a > "$wk_dir/blast/$sequencing_basename.fasta"
+# if [[ "$fastq_path" == *.fastq.gz ]]; then
+#     # Get the base name without .fastq.gz
+#     sequencing_basename=$(basename "$fastq_path" .fastq.gz)
+#     gunzip -c "$fastq_path" | seqtk seq -a > "$wk_dir/blast/$sequencing_basename.fasta"
 
-elif [[ "$fastq_path" == *.fastq ]]; then
-    # Get the base name without .fastq
-    sequencing_basename=$(basename "$fastq_path" .fastq)
-    seqtk seq -a "$fastq_path" > "$wk_dir/blast/$sequencing_basename.fasta"
-else
-    echo "Error: Unsupported file extension. Expected .fastq or .fastq.gz"
-    exit 1
-fi
+# elif [[ "$fastq_path" == *.fastq ]]; then
+#     # Get the base name without .fastq
+#     sequencing_basename=$(basename "$fastq_path" .fastq)
+#     seqtk seq -a "$fastq_path" > "$wk_dir/blast/$sequencing_basename.fasta"
+# else
+#     echo "Error: Unsupported file extension. Expected .fastq or .fastq.gz"
+#     exit 1
+# fi
 
-#Header names are too long, make it shorter
-seqkit replace \
-  -p '^([^ ]+).*$' \
-  -r '$1' \
-  "$wk_dir/blast/$sequencing_basename.fasta" \
-> "$wk_dir/blast/$sequencing_basename.idonly.fasta"
+cutadapt -g "file:$re_file" --revcomp -o "$wk_dir/RE_contain_contigs.fasta" --fasta --discard-untrimmed -O 20 -j 0 "$fastq_path"
+# #Header names are too long, make it shorter
+# seqkit replace \
+#   -p '^([^ ]+).*$' \
+#   -r '$1' \
+#   "$wk_dir/blast/$sequencing_basename.fasta" \
+# > "$wk_dir/blast/$sequencing_basename.idonly.fasta"
 
-#delete temp file
-rm "$wk_dir/blast/$sequencing_basename.fasta"
-mv "$wk_dir/blast/$sequencing_basename.idonly.fasta" "$wk_dir/blast/$sequencing_basename.fasta"
+# #delete temp file
+# rm "$wk_dir/blast/$sequencing_basename.fasta"
+# mv "$wk_dir/blast/$sequencing_basename.idonly.fasta" "$wk_dir/blast/$sequencing_basename.fasta"
 
-#make blast database
-makeblastdb -parse_seqids -in "$wk_dir/blast/$sequencing_basename.fasta" -dbtype nucl -out "$wk_dir/blast/$sequencing_basename"
+# #make blast database
+# makeblastdb -parse_seqids -in "$wk_dir/blast/$sequencing_basename.fasta" -dbtype nucl -out "$wk_dir/blast/$sequencing_basename"
 
-blastn \
--db "$wk_dir/blast/$sequencing_basename" \
--task blastn-short \
--query "$re_file" \
--perc_identity 90 -qcov_hsp_perc 90 \
--outfmt "6 sseqid sstart send sstrand" \
--word_size 4 \
--soft_masking false \
--dust no \
--max_target_seqs 1000000 \
--out "$wk_dir/blast/RE_blast.tsv"
+# blastn \
+# -db "$wk_dir/blast/$sequencing_basename" \
+# -task blastn-short \
+# -query "$re_file" \
+# -perc_identity 90 -qcov_hsp_perc 90 \
+# -outfmt "6 sseqid sstart send sstrand" \
+# -word_size 4 \
+# -soft_masking false \
+# -dust no \
+# -max_target_seqs 1000000 \
+# -out "$wk_dir/blast/RE_blast.tsv"
 
-#Extract the downstream of RE from all RE-contain contigs
-python RE_blast_contig_fetch.py \
-  -f "$wk_dir/blast/$sequencing_basename.fasta" \
-  -t "$wk_dir/blast/RE_blast.tsv" \
-  -o "$wk_dir/RE_contain_contigs.fasta"
-#   -s 200 \
+# #Extract the downstream of RE from all RE-contain contigs
+# python RE_blast_contig_fetch.py \
+#   -f "$wk_dir/blast/$sequencing_basename.fasta" \
+#   -t "$wk_dir/blast/RE_blast.tsv" \
+#   -o "$wk_dir/RE_contain_contigs.fasta"
+# #   -s 200 \
 
 echo "Mapping RE onto reference genome"
 minimap2 -t 48 -ax map-ont "$genome_file" "$wk_dir/RE_contain_contigs.fasta" | samtools view -bS | samtools sort -o "$wk_dir/aligned_contigs.bam" - && samtools index "$wk_dir/aligned_contigs.bam"
