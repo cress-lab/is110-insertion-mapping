@@ -28,25 +28,6 @@ class BridgeRNAReaction():
         self.donor_site, self.ld, self.donor_core, self.rd = donor
         print(f"Using:\tTarget site: {self.target_site}\n\tDonor site: {self.donor_site}")
 
-    # TODO: more descriptive error messages
-    # def _verify_unique_donor(self, target_matches, donor_matches):
-    #     unique_donor_plasmid = len([i for i in donor_matches if i]) == 1
-    #     unique_donor_site = sum([len(i) for i in donor_matches]) == 1
-    #     if not unique_donor_plasmid:
-    #         raise ValueError(f"Expected exactly one donor plasmid match, but found {len(donor_matches)}.")
-
-    #     if not unique_donor_site:
-    #         total_donor_sites = sum(len(i) for i in donor_matches)
-    #         raise ValueError(f"Expected exactly one donor site match, but found {total_donor_sites} total.")
-
-    #     unique_target_plasmid = len([i for i in target_matches if i]) == 1
-    #     unique_target_site = sum([len(i) for i in target_matches]) == 1
-    #     if not unique_target_plasmid:
-    #         raise ValueError(f"Expected exactly one target plasmid match, but found {len(target_matches)}.")
-
-    #     if not unique_target_site:
-    #         total_target_sites = sum(len(i) for i in target_matches)
-    #         raise ValueError(f"Expected exactly one target site match, but found {total_target_sites} total.")
     def _verify_unique_site(self, matches, mode):
         unique_plasmid = len([i for i in matches if i]) == 1
         unique_site = sum([len(i) for i in matches]) == 1
