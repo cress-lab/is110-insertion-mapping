@@ -1,0 +1,185 @@
+"""
+Workflow for finding + classifying taxonomy for 16S sequences with insertions 
+from community editing experiments.
+USAGE:
+    snakemake --cores 80 --rerun-incomplete --use-conda \
+    --config \
+        wk_dir="../../data/community_editing/DKDTH4" \
+        fastq_path="../../sequences/reads/DKDTH4_1_MCKanCm_gPCR.fastq" \
+        brna_plasmid_file="../../sequences/plasmids/pJRP1063.gbk" 
+NOTE: include --conda-frontend mamba if need to install envs
+"""
+
+import os
+from snakemake.io import directory
+
+configfile: "config.yaml"
+
+script_dir = config["script_dir"]
+# script_dir = "../../scripts"
+# wk_dir = config["wk_dir"]
+# fastq_path = config["fastq_path"]
+# max_length = str(config["max_length"])
+# brna_env = "../../envs/brna.yml"
+map_env = "../../envs/map_env.yml"
+qiime2_env = "../../envs/qiime2-amplicon-2024.10-py310-linux-conda.yml"
+
+# LE_file = os.path.join(wk_dir, "input", "LE.fasta")
+
+def required_config(keys):
+    for key in keys:
+        if key not in config:
+            raise ValueError(f"Missing required config key: '{key}'")
+
+required_config(["wk_dir", "fastq_path", "brna_plasmid_file"])
+print(config)
+
+
+rule all:
+    input:
+        taxonomy = os.path.join(config["wk_dir"], "taxonomy", "taxonomy_table.tsv")
+
+
+# rule check_bridgernadesigner:
+#     conda: map_env
+#     message: "Checking and installing bridgernadesigner if missing..."
+#     output:
+#         "logs/bridgernadesigner_checked.txt"
+#     shell:
+#         """
+#         python -c "
+# import importlib.metadata as importlib_metadata
+# try:
+#     version = importlib_metadata.version('bridgernadesigner')
+#     assert version == '0.0.1'
+# except Exception:
+#     import sys, subprocess
+#     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'bridgernadesigner==0.0.1'])
+#             "
+#         """
+
+
+rule extract_le:
+    input:
+        # "logs/bridgernadesigner_checked.txt",
+        brna_plasmid_file = config["brna_plasmid_file"]
+    output:
+        le = os.path.join(config["wk_dir"], "input", "LE.fasta")
+    conda:
+        map_env
+    shell:
+        """
+        mkdir -p {config[wk_dir]}/input
+        python {script_dir}/extract_insertion_end.py \
+            -b {input.brna_plasmid_file} \
+            -o {config[wk_dir]}/input \
+            -m "L" \
+            -n 50
+        """
+
+
+rule amplicon_size_filter:
+    input:
+        fastq = config["fastq_path"]
+    output:
+        reads = os.path.join(config["wk_dir"], "reads.fastq")
+    conda:
+        qiime2_env
+    shell:
+        """
+        python {script_dir}/amplicon_size_filter.py \
+            -i {input.fastq} \
+            -n {config[max_length]} \
+            -o {config[wk_dir]}
+        """
+
+
+rule cutadapt_trim:
+    input:
+        reads = rules.amplicon_size_filter.output.reads,
+        le = rules.extract_le.output.le 
+    output:
+        trimmed = os.path.join(config["wk_dir"], "LE_containing_amplicons.fasta")
+    conda:
+        qiime2_env
+    shell:
+        """
+        cutadapt -a file:{input.le} --revcomp --fasta --discard-untrimmed -O 10 -j 0 {input.reads} > {output.trimmed}
+        """
+
+rule remove_chimeras:
+    input:
+        trimmed = rules.cutadapt_trim.output.trimmed
+    output:
+        nonchimeras = os.path.join(config["wk_dir"], "nonchimeras.fasta"),
+        chimeras = os.path.join(config["wk_dir"], "chimeras.fasta"),
+        borderline = os.path.join(config["wk_dir"], "borderline.fasta")
+    conda:
+        qiime2_env
+    shell:
+        """
+        vsearch --uchime_ref {input.trimmed} \
+            --db {config[silva_db]} \
+            --nonchimeras {output.nonchimeras} \
+            --chimeras {output.chimeras} \
+            --borderline {output.borderline}
+        """
+
+rule qiime_import:
+    input:
+        fasta = rules.remove_chimeras.output.nonchimeras
+    output:
+        qza = os.path.join(config["wk_dir"], "nonchimeras.qza")
+    conda:
+        qiime2_env
+    shell:
+        """
+        qiime tools import \
+            --input-path {input.fasta} \
+            --output-path {output.qza} \
+            --type 'FeatureData[Sequence]' \
+            --input-format DNAFASTAFormat
+        """
+
+rule qiime_classify:
+    input:
+        qza = rules.qiime_import.output.qza
+    output:
+        taxonomy = os.path.join(config["wk_dir"], "nonchimeras.taxonomy.qza")
+    conda:
+        qiime2_env
+    shell:
+        """
+        qiime feature-classifier classify-sklearn \
+            --i-classifier {config[qiime_classifier]} \
+            --i-reads {input.qza} \
+            --o-classification {output.taxonomy}
+        """
+
+rule qiime_export_taxonomy:
+    input:
+        taxonomy = rules.qiime_classify.output.taxonomy
+    output:
+        taxonomy_dir = directory(os.path.join(config["wk_dir"], "taxonomy")),
+        taxonomy_table = os.path.join(config["wk_dir"], "taxonomy", "taxonomy.tsv")
+    conda:
+        qiime2_env
+    shell:
+        """
+        qiime tools export \
+            --input-path {input.taxonomy} \
+            --output-path {output.taxonomy_dir}
+        """
+
+rule process_taxonomy:
+    input:
+        taxonomy_table = rules.qiime_export_taxonomy.output.taxonomy_table,
+        taxonomy_dir = os.path.join(config["wk_dir"], "taxonomy")
+    output:
+        os.path.join(config["wk_dir"], "taxonomy", "taxonomy_table.tsv")
+    conda:
+        qiime2_env
+    shell:
+        """
+        python {script_dir}/process_taxonomy.py {input.taxonomy_table} {input.taxonomy_dir}
+        """

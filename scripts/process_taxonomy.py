@@ -1,14 +1,14 @@
 import pandas as pd
 import sys
 
-wk_dir=sys.argv[1]
+taxonomy_file=sys.argv[1]
+output_dir=sys.argv[2]
 
-df = pd.read_csv(f"{wk_dir}/taxonomy/taxonomy.tsv", sep="\t")
+df = pd.read_csv(taxonomy_file, sep="\t")
 # Extract taxonomy, removing species
-taxonomy = df["Taxon"]#.str.split(";", expand=True).drop(6, axis=1).values
-# taxonomy = pd.Series(taxonomy[:, -1]).str.split("__", expand=True).values[:, -1]
+taxonomy = df["Taxon"]
 res = pd.Series(taxonomy).value_counts()
 res_pct = pd.Series(taxonomy).value_counts(normalize=True)
 result = pd.concat([res, res_pct], axis=1)
 result.index.name = "classification"
-result.to_csv(f"{wk_dir}/taxonomy/taxonomy_table.tsv", sep="\t")
+result.to_csv(f"{output_dir}/taxonomy_table.tsv", sep="\t")

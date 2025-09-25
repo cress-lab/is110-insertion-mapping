@@ -1,3 +1,6 @@
 data
 misc
+sequences/reads
+sequences/README.docx
+.snakemake
 __pycache__

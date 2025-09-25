@@ -1,0 +1,11 @@
+# wk_dir: /path/to/your/workdir
+# fastq_path: /path/to/your/input.fastq
+# max_length: 300
+# brna_plasmid_file: /path/to/brna.fasta
+silva_db: /path/to/silva.fasta
+qiime_classifier: /path/to/classifier.qza
+script_dir: ../../scripts
+silva_db: /shared/db/silva/latest/fasta/SILVA_138_SSURef_NR99_tax_silva_trunc.replace-whitespace.fasta
+qiime_classifier: /groups/cress/projects/efactors/ryuichi/is110/20250808/qiime/silva-138-99-nb-classifier.qza
+
+max_length: 600
