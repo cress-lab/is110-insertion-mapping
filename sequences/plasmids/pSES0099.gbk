@@ -1,0 +1,578 @@
+LOCUS       P7YMY9_pSES0099         9503 bp    DNA     circular SYN 18-JUL-2025
+DEFINITION  3_pSES0099.
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 9503)
+  AUTHORS   .
+  TITLE     Direct Submission
+  JOURNAL   Exported Aug 7, 2025 from SnapGene 8.1.0
+            https://www.snapgene.com
+FEATURES             Location/Qualifiers
+     source          1..9503
+                     /mol_type="other DNA"
+                     /organism="synthetic DNA construct"
+     misc_feature    565..1852
+                     /label=PCR from pHLL250 template
+                     /note="color: #000000"
+     CDS             complement(574..1434)
+                     /codon_start=1
+                     /gene="bla"
+                     /product="beta-lactamase"
+                     /label=beta-lactamase
+                     /note="ampR (confers resistance to ampicillin)"
+                     /note="color: #ffc0cb"
+                     /translation="MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYI
+                     ELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYS
+                     PVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRW
+                     EPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSA
+                     LPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGAS
+                     LIKHW"
+     gene            complement(574..1434)
+                     /gene="bla"
+                     /label=bla
+                     /note="color: #ffc0cb; direction: LEFT"
+     promoter        complement(1435..1539)
+                     /gene="bla"
+                     /label=AmpR promoter
+                     /note="color: #ffffff; direction: LEFT"
+     misc_feature    1597..1614
+                     /label=oriT
+                     /label=oriT(1)
+                     /note="color: #ff00ff"
+     misc_feature    1615..1840
+                     /label=oriT
+                     /note="color: #ff00ff"
+     misc_feature    1732..1841
+                     /label=OPPOSITE STRAND RELATIVE TO pAM5409!!!! (PROB???)
+                     /note="color: #ff0000"
+     oriT            1732..1841
+                     /label=oriT (RK2-bom for RP4 transfer)
+                     /note="incP origin of transfer"
+                     /note="color: #a6acb3"
+     misc_feature    1853..1860
+                     /label=SbfI
+                     /note="color: #ff00ff; direction: BOTH"
+     misc_feature    1861..1875
+                     /label=UNS spacer
+                     /note="color: #ffff99"
+     misc_feature    1876..1883
+                     /label=AsiSI
+                     /note="color: #ff00ff; direction: BOTH"
+     misc_feature    complement(1884..1904)
+                     /label=oBFC1459 decoy primer
+                     /note="color: #800000; direction: LEFT"
+     misc_feature    join(1927..1936,1937..1938,1939..1948)
+                     /label=attP?!?!?
+                     /note="This feature has 3 segments:
+                        1: 1927 .. 1936 / #ff9900 / Non-Coding End
+                        2: 1937 .. 1938 / #008000 / Core Sequence
+                        3: 1939 .. 1948 / #ff9900 / Non-Coding End"
+     misc_feature    1927..1948
+                     /label=Donor B (D8)
+                     /note="color: #a6acb3"
+     misc_feature    1927..1936
+                     /label=LE
+                     /note="color: #a6acb3"
+     misc_feature    join(1932..1933,1935..1945)
+                     /label=bound by bridgeRNA
+                     /note="This feature has 2 segments:
+                        1: 1932 .. 1933 / #a6acb3
+                        2: 1935 .. 1945 / #a6acb3"
+     misc_feature    1939..1948
+                     /label=RE
+                     /note="color: #a6acb3"
+     misc_feature    1977..2002
+                     /label=2xLguI Stuffer for Barcodes
+                     /note="part 3 promoters from EMMA toolkit"
+                     /note="color: #ff9900"
+     misc_feature    2007..2026
+                     /label=T7 promoter
+                     /note="color: #cc66ff"
+     promoter        complement(2008..2026)
+                     /label=T7 promoter
+                     /note="promoter for bacteriophage T7 RNA polymerase"
+                     /note="color: #ffffff; direction: LEFT"
+     misc_feature    join(2031..2033,2034..2059,2060..2062)
+                     /label=2xLguI Pt2+3 Stuffer
+                     /note="This feature has 3 segments:
+                        1: 2031 .. 2033 / #99cc00 / OH
+                        2: 2034 .. 2059 / #00ff00 / 2xLguI Pt2+3 Stuffer
+                        3: 2060 .. 2062 / #99cc00 / OH"
+     terminator      2085..2118
+                     /label=BBa_B1001 bidirectional terminator
+                     /note="color: #a6acb3"
+     misc_feature    2122..2163
+                     /label=Stuffer to include additional guides
+                     /note="color: #a6acb3"
+     ncRNA           complement(2159..2248)
+                     /label=HDV ribozyme
+                     /note="pLannotate"
+                     /note="/database=Rfam"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=98.9"
+                     /note="/other=ncRNA"
+                     /note="color: #8fbc8f; direction: LEFT"
+     misc_feature    complement(2250..2426)
+                     /label=Bridge RNA
+                     /note="color: #cc99ff; direction: LEFT"
+     misc_feature    complement(join(2250..2259,2260..2261,2262..2263,2264..2266,
+                     2269..2270,2271..2295,2296..2297,2298..2304,2305..2317))
+                     /label=Donor-Binding Loop
+                     /note="This reverse directional feature has 9 segments:
+                        1: 2250 .. 2259 / #ff9900 / Donor Stem
+                        2: 2260 .. 2261 / #ff9900 / HSG
+                        3: 2262 .. 2263 / #ff9900 / Core Rev Comp
+                        4: 2264 .. 2266 / #ff9900 / RDG
+                        5: 2269 .. 2270 / #ff9900 / RDG
+                        6: 2271 .. 2295 / #ff9900 / Donor Stem Loop
+                        7: 2296 .. 2297 / #ff9900 / Core
+                        8: 2298 .. 2304 / #ff9900 / LDG
+                        9: 2305 .. 2317 / #ff9900 / Donor Stem"
+     misc_feature    2250..2259
+                     /label=Fixed Sequence
+                     /note="color: #000000"
+     misc_feature    2271..2296
+                     /label=Fixed Sequence
+                     /note="color: #000000"
+     misc_feature    2305..2344
+                     /label=Fixed Sequence
+                     /note="color: #000000"
+     misc_feature    2318..2331
+                     /label=LINKER
+                     /note="color: #a6acb3"
+     misc_feature    complement(join(2332..2344,2345..2346,2347..2348,2349..2353,
+                     2354..2368,2369..2370,2371..2377,2378..2393))
+                     /label=Target-Binding Loop
+                     /note="This reverse directional feature has 8 segments:
+                        1: 2332 .. 2344 / #99ccff / Target Stem
+                        2: 2345 .. 2346 / #99ccff / HSG
+                        3: 2347 .. 2348 / #99ccff / Core Rev Comp
+                        4: 2349 .. 2353 / #99ccff / RTG
+                        5: 2354 .. 2368 / #99ccff / Target Stem Loop
+                        6: 2369 .. 2370 / #99ccff / Core
+                        7: 2371 .. 2377 / #99ccff / LTG
+                        8: 2378 .. 2393 / #99ccff / Target Stem"
+     misc_feature    2354..2368
+                     /label=Fixed Sequence
+                     /note="color: #000000"
+     misc_feature    2378..2426
+                     /label=fixed sequence
+                     /note="color: #000000"
+     promoter        complement(2427..2461)
+                     /label=J23119 promoter
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=promoter"
+                     /note="color: #ffffff; direction: LEFT"
+     terminator      complement(2462..2495)
+                     /label=BBa_B1002 terminator
+                     /note="color: #ffffff; direction: LEFT"
+     CDS             complement(2496..3476)
+                     /codon_start=1
+                     /label=IS110-like element IS621 family transposase
+                     /note="color: #993366"
+                     /translation="MEHELHYIGIDTAKEKLDVDVLRPDGRHRTKKFANTTKGHDELVS
+                     WLKGHKIDHAHICIEATGTYMEPVAECLYDAGYIVSVINPALGKAFAQSEGLRNKTDTV
+                     DARMLAEFCRQKRPAAWEAPHPLERALRALVVRHQALTDMHTQELNRTETAREVQRPSI
+                     DAHLLWLEAELKRLEKQIKDLTDDDPDMKHRRKLLESIPGIGEKTSAVLLAYIGLKDRF
+                     AHARQFAAFAGLTPRRYESGSSVRGASRMSKAGHVSLRRALYMPAMVATSKTEWGRAFR
+                     DRLAANGKKGKVILGAMMRKLAQVAYGVLKSGVPFDASRHNPVAA"
+     RBS             3479..3496
+                     /label=RBS
+                     /note="color: #75c6a9"
+     misc_feature    complement(3509..4580)
+                     /label=PTet* Promoter Part
+                     /note="color: #99ccff; direction: LEFT"
+     promoter        complement(3509..3562)
+                     /label=PLtetO-1 promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=73.0"
+                     /note="/other=promoter"
+                     /note="color: #ffffff; direction: LEFT"
+     protein_bind    3519..3537
+                     /gene="tetO"
+                     /label=tet operator
+                     /bound_moiety="tetracycline repressor TetR"
+                     /note="bacterial operator O2 for the tetR and tetA genes"
+                     /note="color: #31849b"
+     protein_bind    3544..3562
+                     /gene="tetO"
+                     /label=tet operator
+                     /bound_moiety="tetracycline repressor TetR"
+                     /note="bacterial operator O2 for the tetR and tetA genes"
+                     /note="color: #31849b"
+     promoter        complement(3563..3581)
+                     /label=PLtetO-1 promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=25.7"
+                     /note="/other=promoter"
+                     /note="color: #ffffff; direction: LEFT"
+     misc_feature    complement(3604..3858)
+                     /label=Term IOT
+                     /note="color: #ffffff; direction: LEFT"
+     CDS             complement(3618..3738)
+                     /codon_start=1
+                     /label=TcR (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=10.2"
+                     /note="/other=CDS"
+                     /note="color: #993366"
+                     /translation="DPLRRTHRGRHHRRHRCGCWRLYRRHHRWGRSGSPLRAHE"
+     promoter        3748..3766
+                     /label=tet promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=65.5"
+                     /note="/other=promoter"
+                     /note="color: #ffffff"
+     misc_feature    3868..3949
+                     /label=harvested from upstream TetR
+                     /note="color: #00ffff"
+     misc_feature    3868..3921
+                     /label=TetR Prom
+                     /note="color: #00ff00; direction: RIGHT"
+     promoter        3876..3949
+                     /label=lacI promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=94.9"
+                     /note="/other=promoter"
+                     /note="color: #ffffff"
+     misc_feature    3922..3949
+                     /label=RBS tet1
+                     /note="color: #00ff00; direction: RIGHT"
+     CDS             3950..4573
+                     /codon_start=1
+                     /label=TetR
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=CDS"
+                     /note="color: #993366"
+                     /translation="MSRLDKSKVINSALELLNEVGIEGLTTRKLAQKLGVEQPTLYWHV
+                     KNKRALLDALAIEMLDRHHTHFCPLEGESWQDFLRNNAKSFRCALLSHRDGAKVHLGTR
+                     PTEKQYETLENQLAFLCQQGFSLENALYALSAVGHFTLGCVLEDQEHQVAKEERETPTT
+                     DSMPPLLRQAIELFDHQGAEPAFLFGLELIICGLEKQLKCESGS"
+     misc_feature    join(4606..9503,1..564)
+                     /label=PCR from pAM5409
+                     /note="color: #000000"
+     CDS             complement(4677..5528)
+                     /codon_start=1
+                     /label=RSF1010 RepC
+                     /note="color: #993366"
+                     /translation="VVKPKNKHSLSHVRHDPAHCLAPGLFRALKRGERKRSKLDVTYDY
+                     GDGKRIEFSGPEPLGADDLRILQGLVAMAGPNGLVLGPEPKTEGGRQLRLFLEPKWEAV
+                     TADAMVVKGSYRALAKEIGAEVDSGGALKHIQDCIERLWKVSIIAQNGRKRQGFRLLSE
+                     YASDEADGRLYVALNPLIAQAVMGGGQHVRISMDEVRALDSETARLLHQRLCGWIDPGK
+                     TGKASIDTLCGYVWPSEASGSTMRKRRQRVREALPELVALGWTVTEFAAGKYDITRPKA
+                     AG"
+     CDS             complement(5515..6354)
+                     /codon_start=1
+                     /gene="repA"
+                     /product="replication protein A of the broad-host-range 
+                     plasmid RSF1010 from Salmonella enterica serovar 
+                     Typhimurium"
+                     /label=RSF1010 RepA
+                     /note="color: #993366"
+                     /translation="MATHKPINILEAFAAAPPPLDYVLPNMVAGTVGALVSPGGAGKSM
+                     LALQLAAQIAGGPDLLEVGELPTGPVIYLPAEDPPTAIHHRLHALGAHLSAEERQAVAD
+                     GLLIQPLIGSLPNIMAPEWFDGLKRAAEGRRLMVLDTLRRFHIEEENASGPMAQVIGRM
+                     EAIAADTGCSIVFLHHASKGAAMMGAGDQQQASRGSSVLVDNIRWQSYLSSMTSAEAEE
+                     WGVDDDQRRFFVRFGVSKANYGAPFADRWFRRHDGGVLKPAVLERQRKSKGVPRGEA"
+     CDS             complement(6384..6590)
+                     /codon_start=1
+                     /label=RSF1010 RepF
+                     /note="color: #993366"
+                     /translation="MKDQKDKQTGDLLASPDAVRQARYAERMKAKGMRQRKFWLTDDEY
+                     EALRECLEELRAAQGGGSDPASA"
+     CDS             complement(6592..6804)
+                     /codon_start=1
+                     /label=RSF1010 RepE
+                     /note="color: #993366"
+                     /translation="MEYEKSASGSVYLIKSDKGYWLPGGFGYTSNKAEAGRFSVADMAS
+                     LNLDGCTLSLFREDKPFGPGKFLGD"
+     regulatory      complement(6834..6861)
+                     /label=P4 promoter
+                     /note="P4; derived from pRL1383a in INSD accessionAF403426,
+                     a derivative of RSF1010 INSD accession M28829; the P4 
+                     promoter is under the auto-regulated control of the F 
+                     repressor, whose gene is located in the same operon, 
+                     providing transcription of E-F-repA-repC-operon"
+                     /note="color: #ffffff; direction: LEFT"
+                     /regulatory_class="promoter"
+     CDS             complement(6865..8994)
+                     /codon_start=1
+                     /label=RSF1010 MobA (WT)
+                     /note="color: #993366"
+                     /translation="MAIYHLTAKTGSRSGGQSARAKADYIQREGKYARDMDEVLHAESG
+                     HMPEFVERPADYWDAADLYERANGRLFKEVEFALPVELTLDQQKALASEFAQHLTGAER
+                     LPYTLAIHAGGGENPHCHLMISERINDGIERPAAQWFKRYNGKTPEKGGAQKTEALKPK
+                     AWLEQTREAWADHANRALERAGHDARIDHRTLEAQGIERLPGVHLGPNVVEMEGRGIRT
+                     DRADVALNIDTANAQIIDLQEYREAIDHERNRQSEEIQRHQRVSGADRTAGPEHGDTGR
+                     RSPAGHEPDPAGQRGAGGGVAESPAPDRGGMGGAGQRVAGGSRRGEQRRAERPERVAGV
+                     ALEAMANRDAGFHDAYGGAADRIVALARPDATDNRGRLDLAALGGPMKNDRTLQAIGRQ
+                     LKAMGCERFDIGVRDATTGQMMNREWSAAEVLQNTPWLKRMNAQGNDVYIRPAEQERHG
+                     LVLVDDLSEFDLDDMKAEGREPALVVETSPKNYQAWVKVADAAGGELRGQIARTLASEY
+                     DADPASADSRHYGRLAGFTNRKDKHTTRAGYQPWVLLRESKGKTATAGPALVQQAGQQI
+                     EQAQRQQEKARRLASLELSERQLSRHRRTALDEYRSEMAGLVKRFGDDLSKCDFIAAQK
+                     LASRGRSAEEIGKAMAEASPALAERKPGHEADYIERTVSKVMGLPSVQLARAELARAPA
+                     PRQRGMDRGGPDFSM"
+     CDS             complement(6865..7836)
+                     /codon_start=1
+                     /gene="repB"
+                     /product="replication protein B of the broad-host-range 
+                     plasmid RSF1010 from Salmonella enterica serovar 
+                     Typhimurium"
+                     /label=RSF1010 RepB
+                     /note="color: #993366"
+                     /translation="MKNDRTLQAIGRQLKAMGCERFDIGVRDATTGQMMNREWSAAEVL
+                     QNTPWLKRMNAQGNDVYIRPAEQERHGLVLVDDLSEFDLDDMKAEGREPALVVETSPKN
+                     YQAWVKVADAAGGELRGQIARTLASEYDADPASADSRHYGRLAGFTNRKDKHTTRAGYQ
+                     PWVLLRESKGKTATAGPALVQQAGQQIEQAQRQQEKARRLASLELSERQLSRHRRTALD
+                     EYRSEMAGLVKRFGDDLSKCDFIAAQKLASRGRSAEEIGKAMAEASPALAERKPGHEAD
+                     YIERTVSKVMGLPSVQLARAELARAPAPRQRGMDRGGPDFSM"
+     CDS             complement(7833..8246)
+                     /codon_start=1
+                     /label=RSF1010 MobB
+                     /note="color: #993366"
+                     /translation="MNAIDRVKKSRGINELAEQIEPLAQSMATLADEARQVMSQTQQAS
+                     EAQAAEWLKAQRQTGAAWVELAKELREVAAEVSSAAQSARSASRGWHWKLWLTVMLASM
+                     MPTVVLLIASLLLLDLTPLTTEDGSIWLRLVAR"
+     oriT            9075..9162
+                     /label=RSF1010 oriT
+                     /note="origin of transfer of the broad-host-range plasmid 
+                     RSF1010 (Scholz et al., 1989)
+                     
+                     oriT; origin of transfer from conjugation; from pRL1383a in
+                     INSD accession AF403426, a derivative of RSF1010 INSD 
+                     accession M288298"
+                     /note="color: #a6acb3"
+     regulatory      9129..9160
+                     /label=P2 promoter
+                     /note="P2; derived from pRL1383a in INSD accessionAF403426,
+                     a derivative of RSF1010 INSD accession M28829; the P2 
+                     promoter is controlled by MobC and MobA provide 
+                     transcription of mobC"
+                     /note="color: #ffffff"
+                     /regulatory_class="promoter"
+     regulatory      complement(9152..9182)
+                     /label=P3 promoter
+                     /note="P3; derived from pRL1383a in INSD accessionAF403426,
+                     a derivative of RSF1010 INSD accession M28829; the P3 is 
+                     controlled by MobC and MobA provide transcription of 
+                     mobA/repB, mobB, and, probably, E-F-repA-repC-operon"
+                     /note="color: #ffffff; direction: LEFT"
+                     /regulatory_class="promoter"
+     regulatory      complement(9171..9202)
+                     /label=P1 promoter
+                     /note="P1; derived from pRL1383a in INSD accessionAF403426,
+                     a derivative of RSF1010 INSD accession M28829; the P1 
+                     promoter is controlled by MobC and MobA provide 
+                     transcription of mobA/repB, mobB, and, probably, 
+                     E-F-repA-repC-operon"
+                     /note="color: #ffffff; direction: LEFT"
+                     /regulatory_class="promoter"
+     CDS             9193..9477
+                     /codon_start=1
+                     /label=RSF1010 MobC
+                     /note="color: #993366"
+                     /translation="MVKGSNKAADRLAKLEEQRARINAEIQRVRAREQQQERKNETRRK
+                     VLVGAMILAKVNSSEWPEDRLMAAMDAYLERDHDRALFGLPPRQKDEPG"
+     rep_origin      complement(join(9410..9503,1..395,396..406))
+                     /direction=LEFT
+                     /label=RSF1010 oriV
+                     /note="oriV; origin of replication; derived from pRL1383a 
+                     in INSD accession AF403426, a derivative of RSF1010 INSD 
+                     accession M28829
+                     
+                     SnapGene annotation: replication origin of the 
+                     broad-host-range plasmid RSF1010 from Salmonella enterica 
+                     serovar Typhimurium; requires the RSF1010 RepA/B/C proteins
+                     for replication"
+                     /note="This feature has 3 segments:
+                        1: 9410 .. 9503 / #ffff00 / RSF1010 oriV
+                        2:    1 ..  395 / #ffff00 / annotated by SnapGene
+                        3:  396 ..  406 / #ffff00 / RSF1010 oriV"
+ORIGIN
+        1 ggctgcacac gcgcccccac ccttcgggta gggggaaagg ccgctaaagc ggctaaaagc
+       61 gctccagcgt atttctgcgg ggtttggtgt ggggtttagc gggctttgcc cgcctttccc
+      121 cctgccgcgc agcggtgggg cggtgtgtag cctagcgcag cgaatagacc agctatccgg
+      181 cctctggccg ggcatattgg gcaagggcag cagcgcccca caagggcgct gataaccgcg
+      241 cctagtggat tattcttaga taatcatgga tggatttttc caacaccccg ccagcccccg
+      301 cccctgctgg gtttgcaggt ttgggggcgt gacagttatt gcaggggttc gtgacagtta
+      361 ttgcaggggg gcgtgacagt tattgcaggg gttcgtgaca gttagtacgg gagtgacggg
+      421 cactggctgg caatgtctag caacggcagg catttcggct gagggtaaaa gaactttccg
+      481 ctaagcgata gactgtatgt aaacacagta ttgcaaggac gcggaacatg cctcatgtgg
+      541 cggccctcgc gagaattaat tcaggtctga cagttaccaa tgcttaatca gtgaggcacc
+      601 tatctcagcg atctgtctat ttcgttcatc catagttgcc tgactccccg tcgtgtagat
+      661 aactacgata cgggagggct taccatctgg ccccagtgct gcaatgatac cgcgagagcc
+      721 acgctcaccg gctccagatt tatcagcaat aaaccagcca gccggaaggg ccgagcgcag
+      781 aagtggtcct gcaactttat ccgcctccat ccagtctatt aattgttgcc gggaagctag
+      841 agtaagtagt tcgccagtta atagtttgcg caacgttgtt gccattgcta caggcatcgt
+      901 ggtgtcacgc tcgtcgtttg gtatggcttc attcagctcc ggttcccaac gatcaaggcg
+      961 agttacatga tcccccatgt tgtgcaaaaa agcggttagc tccttcggtc ctccgatcgt
+     1021 tgtcagaagt aagttggccg cagtgttatc actcatggtt atggcagcac tgcataattc
+     1081 tcttactgtc atgccatccg taagatgctt ttctgtgact ggtgagtact caaccaagtc
+     1141 attctgagaa tagtgtatgc ggcgaccgag ttgctcttgc ccggcgtcaa tacgggataa
+     1201 taccgcgcca catagcagaa ctttaaaagt gctcatcatt ggaaaacgtt cttcggggcg
+     1261 aaaactctca aggatcttac cgctgttgag atccagttcg atgtaaccca ctcgtgcacc
+     1321 caactgatct tcagcatctt ttactttcac cagcgtttct gggtgagcaa aaacaggaag
+     1381 gcaaaatgcc gcaaaaaagg gaataagggc gacacggaaa tgttgaatac tcatactctt
+     1441 cctttttcaa tattattgaa gcatttatca gggttattgt ctcatgagcg gatacatatt
+     1501 tgaatgtatt tagaaaaata aacaaatagg ggttccgcgc acatttcccc gaaaagtgcc
+     1561 acctgacgtc taagaaacca ttattatcat gacattcttt tccgctgcat aaccctgctt
+     1621 cggggtcatt atagcgattt tttcggtata tccatccttt ttcgcacgat atacaggatt
+     1681 ttgccaaagg gttcgtgtag actttccttg gtgtatccaa cggcgtcagc cgggcaggat
+     1741 aggtgaagta ggcccacccg cgagcgggtg ttccttcttc actgtccctt attcgcacct
+     1801 ggcggtgctc aacgggaatc ctgctctgcg aggctggccg ataagcaaga atcctgcagg
+     1861 ctgatgcgag taatggcgat cgcggtgagt ttccttttgt gctgcacctg ccaaagtcct
+     1921 cctacgggat aatattagac taccgtataa ggcgtactca ctgccatacc cgactgtgaa
+     1981 gagcggcgtt gagcgctctt cttatcccct atagtgagtc gtattacagc agccgaagag
+     2041 ctcgagatct cgctcttcct ttctgagtgg gtcttaagac gtcgaaaaaa aaaccccgcc
+     2101 gaagcggggt ttttttttgg gaccttgaga cgttcatata ccaatgtaga ctcgtctcat
+     2161 gggtcccatt cgccattacc gaggaggacg gtcccctcgg aatgttgccc agccggcgcc
+     2221 agcgaggagg ctgggaccat gccggccata gtgaaaccag tcttgtaaat acggattacc
+     2281 gggaaaaccg gtccatgata ctgtccggtt tatcactttg ggagaaaggc agtccgctgc
+     2341 ataaatctac ttaacaggtt agaacccaag acgcctaacg gcatgcggac tgcaggcaga
+     2401 gaaaactggc cgattttctc tgcactgcta gcattatacc taggactgag ctagctgtca
+     2461 agcgaaaaaa ccccgccgaa gcggggtttt ttgcgttacg ccgctaccgg attatgccgt
+     2521 gacgcatcga acggcacgcc tgacttcagc actccatacg ccacctgtgc cagcttgcgc
+     2581 atcatcgcgc cgagaatcac ctttcctttc ttgccattag ccgccagacg gtcgcggaac
+     2641 gcccgtcccc actcagtctt actggtggct accattgcgg gcatatacaa cgccctgcga
+     2701 agcgacacat gtccggcctt actcatccgg ctcgcccctc tcacactgct acctgattca
+     2761 taacgccgtg gtgtcagacc cgcaaaagcg gcgaactgtc tggcatgggc gaagcggtcc
+     2821 ttcagaccga tataagccag caataccgca gatgttttct ctccgatacc cgggatgctt
+     2881 tccagcagtt tcctgcggtg tttcatatcc ggatcatcgt ctgtcaggtc ttttatctgc
+     2941 ttctcaagac gcttcagctc tgcttcaagc cacagaaggt gagcatcaat gctcggtctt
+     3001 tggacttccc gcgccgtttc agtgcgattc agttcctgcg tgtgcatatc tgtcagcgcc
+     3061 tggtggcgga ctaccagggc acgcaacgcg cgttcaagcg ggtgaggcgc ttcccaggct
+     3121 gcagggcgct tctgacgaca gaactctgcc agcatgcgcg catccacggt atcagtcttg
+     3181 ttacgcagtc cttcactctg agcgaaagct ttacccagcg caggattaat gactgacact
+     3241 atgtagccag catcgtaaag gcactcagcg acaggttcca tataggtgcc ggtcgcttcg
+     3301 atgcagatat gcgcatggtc aatcttgtga cctttcagcc agctcaccag ctcatcgtgc
+     3361 cctttagtgg tgttagcgaa ttttttggtg cgatgacgac catcaggacg caacacatcg
+     3421 acatccagtt tctctttagc ggtgtcgata ccgatataat gaagttcatg ttccattagt
+     3481 atatctcctt cttaaacttt ctctagtagt gctcagtatc tctatcactg atagggatgt
+     3541 caatctctat cactgatagg gaggtcagtg cgtcctgctg aaaacagcca acgatcgtta
+     3601 agccagataa aatatttgct catgagcccg aagtggcgag cccgatcttc cccatcggtg
+     3661 atgtcggcga tataggcgcc agcaaccgca cctgtggcgc cggtgatgcc ggccacgatg
+     3721 cgtccggcgt agaggatctg ctcatgtttg acagcttatc atcgatgcat aatgtgcctg
+     3781 tcaaatggac gaagcaggga ttctgcaaac cctatgctac tccctcgagc cgtcaattgt
+     3841 ctgattcgtt accaattagg atccttagcg gcgcgccatc gaatggcgca aaacctttcg
+     3901 cggtatggca tgatagcgcc cggaagagag tcaattcagg gtggtgaata tgtctagatt
+     3961 agataaaagt aaagtgatta acagcgcatt agagctgctt aatgaggtcg gaatcgaagg
+     4021 tttaacaacc cgtaaactcg cccagaagct aggtgtagag cagcctacat tgtattggca
+     4081 tgtaaaaaat aagcgggctt tgctcgacgc cttagccatt gagatgttag ataggcacca
+     4141 tactcacttt tgccctttag aaggggaaag ctggcaagat tttttacgta ataacgctaa
+     4201 aagttttaga tgtgctttac taagtcatcg cgatggagca aaagtacatt taggtacacg
+     4261 gcctacagaa aaacagtatg aaactctcga aaatcaatta gcctttttat gccaacaagg
+     4321 tttttcacta gagaatgcat tatatgcact cagcgctgtg gggcatttta ctttaggttg
+     4381 cgtattggaa gatcaagagc atcaagtcgc taaagaagaa agggaaacac ctactactga
+     4441 tagtatgccg ccattattac gacaagctat cgaattattt gatcaccaag gtgcagagcc
+     4501 agccttctta ttcggccttg aattgatcat atgcggatta gaaaaacaac ttaaatgtga
+     4561 aagtgggtct taagacgtcg gatatcagtc tggttcgggc aggtgccaat tagcaggaaa
+     4621 ataagccatt gaatataaaa gataaaaatg tcttgtttac aatagagtgg ggggggtcag
+     4681 cctgccgcct tgggccgggt gatgtcgtac ttgcccgccg cgaactcggt taccgtccag
+     4741 cccagcgcga ccagctccgg caacgcctcg cgcacccgct ggcggcgctt gcgcatggtc
+     4801 gaaccactgg cctctgacgg ccagacatag ccgcacaagg tatctatgga agccttgccg
+     4861 gttttgccgg ggtcgatcca gccacacagc cgctggtgca gcaggcgggc ggtttcgctg
+     4921 tccagcgccc gcacctcgtc catgctgatg cgcacatgct ggccgccacc catgacggcc
+     4981 tgcgcgatca aggggttcag ggccacgtac aggcgcccgt ccgcctcgtc gctggcgtac
+     5041 tccgacagca gccgaaaccc ctgccgcttg cggccattct gggcgatgat ggataccttc
+     5101 caaaggcgct cgatgcagtc ctgtatgtgc ttgagcgccc caccactatc gacctctgcc
+     5161 ccgatttcct ttgccagcgc ccgatagcta cctttgacca ccatggcatc agcggtgacg
+     5221 gcctcccact tgggttccag gaacagccgg agctgccgtc cgccttcggt cttgggttcc
+     5281 gggccaagca ctaggccatt aggcccagcc atggccacca gcccttgcag gatgcgcaga
+     5341 tcatcagcgc ccagcggctc cgggccgctg aactcgatcc gcttgccgtc gccgtagtca
+     5401 tacgtcacgt ccagcttgct gcgcttgcgc tcgccccgct tgagggcacg gaacaggccg
+     5461 ggggccagac agtgcgccgg gtcgtgtcgg acgtggctga ggctgtgctt gttcttaggc
+     5521 ttcaccacgg ggcaccccct tgctcttgcg ctgcctctcc agcacggcgg gcttgagcac
+     5581 cccgccgtca tgccgcctga accaccgatc agcgaacggt gcgccatagt tggccttgct
+     5641 cacaccgaag cggacgaaga accggcgctg gtcgtcgtcc acaccccatt cctcggcctc
+     5701 ggcgctggtc atgctcgaca ggtaggactg ccagcggatg ttatcgacca gtaccgagct
+     5761 gccccggctg gcctgctgct ggtcgcctgc gcccatcatg gccgcgccct tgctggcatg
+     5821 gtgcaggaac acgatagagc acccggtatc ggcggcgatg gcctccatgc gaccgatgac
+     5881 ctgggccatg gggccgctgg cgttttcttc ctcgatgtgg aaccggcgca gcgtgtccag
+     5941 caccatcagg cggcggccct cggcggcgcg cttgaggccg tcgaaccact ccggggccat
+     6001 gatgttgggc aggctgccga tcagcggctg gatcagcagg ccgtcagcca cggcttgccg
+     6061 ttcctcggcg ctgaggtgcg ccccaagggc gtgcaggcgg tgatgaatgg cggtgggcgg
+     6121 gtcctcggcg ggcaggtaga tcaccgggcc ggtgggcagt tcgcccacct ccagcagatc
+     6181 cggcccgcct gcaatctgtg cggccagttg cagggccagc atggatttac cggcaccacc
+     6241 gggcgacacc agcgccccga ccgtaccggc caccatgttg ggcaaaacgt agtccagcgg
+     6301 tggcggcgct gctgcgaacg cctccagaat attgataggc ttatgggtag ccattgattg
+     6361 cctcctttgc aggcagttgg tggttaggcg ctggcggggt cactaccccc gccctgcgcc
+     6421 gctctgagtt cttccaggca ctcgcgcagc gcctcgtatt cgtcgtcggt cagccagaac
+     6481 ttgcgctgac gcatcccttt ggccttcatg cgctcggcat atcgcgcttg gcgtacagcg
+     6541 tcagggctgg ccagcaggtc gccggtctgc ttgtcctttt ggtctttcat atcagtcacc
+     6601 gagaaacttg ccggggccga aaggcttgtc ctcgcggaac aaggacaagg tgcagccgtc
+     6661 aaggttaagg ctggccatat cagcgactga aaagcggcca gcctcggcct tgtttgacgt
+     6721 ataaccaaag ccaccgggca accaatagcc cttgtcactt ttgatcaggt agaccgaccc
+     6781 tgaagcgctt ttttcgtatt ccataaaacc cccttctgtg cgtgagtact catagtataa
+     6841 caggcgtgag taccaacgca agcactacat gctgaaatct ggcccgcccc tgtccatgcc
+     6901 tcgctggcgg ggtgccggtg cccgtgccag ctcggcccgc gcaagctgga cgctgggcag
+     6961 acccatgacc ttgctgacgg tgcgctcgat gtaatccgct tcgtggccgg gcttgcgctc
+     7021 tgccagcgct gggctggcct cggccatggc cttgccgatt tcctcggcac tgcggccccg
+     7081 gctggccagc ttctgcgcgg cgataaagtc gcacttgctg aggtcatcac cgaagcgctt
+     7141 gaccagcccg gccatctcgc tgcggtactc gtccagcgcc gtgcgccggt ggcggctaag
+     7201 ctgccgctcg gacagttcga ggctggccag cctgcgggcc ttctcctgct gccgctgggc
+     7261 ctgctcgatc tgctggccag cctgctgcac cagcgccggg ccagcggtgg cggtcttgcc
+     7321 cttggattca cgcagcagca cccacggctg ataaccggcg cgggtggtgt gcttgtcctt
+     7381 gcggttggtg aagcccgcca agcggccata gtggcggctg tcggcgctgg ccgggtcggc
+     7441 gtcgtactcg ctggccagcg tccgggcaat ctgcccccga agttcaccgc ctgcggcgtc
+     7501 ggccaccttg acccatgcct gatagttctt cgggctggtt tccactacca gggcaggctc
+     7561 ccggccctcg gctttcatgt catccaggtc aaactcgctg aggtcgtcca ccagcaccag
+     7621 accatgccgc tcctgctcgg cgggcctgat atacacgtca ttgccctggg cattcatccg
+     7681 cttgagccat ggcgtgttct ggagcacttc ggcggctgac cattcccggt tcatcatctg
+     7741 gccggtggtg gcgtccctga cgccgatatc gaagcgctca cagcccatgg ccttgagctg
+     7801 tcggcctatg gcctgcaaag tcctgtcgtt cttcatcggg ccaccaagcg cagccagatc
+     7861 gagccgtcct cggttgtcag tggcgtcagg tcgagcaaga gcaacgatgc gatcagcagc
+     7921 accaccgtag gcatcatgga agccagcatc acggttagcc atagcttcca gtgccacccc
+     7981 cgcgacgcgc tccgggcgct ctgcgcggcg ctgctcacct cggcggctac ctcccgcaac
+     8041 tctttggcca gctccaccca tgccgcccct gtctggcgct gggctttcag ccactccgcc
+     8101 gcctgcgcct cgctggcctg ctgggtctgg ctcatgacct gccgggcttc gtcggccagt
+     8161 gtcgccatgc tctgggccag cggttcgatc tgctccgcta actcgttgat gcctctggat
+     8221 ttcttcactc tgtcgattgc gttcatggtc tattgcctcc cggtattcct gtaagtcgat
+     8281 gatctgggcg ttggcggtgt cgatgttcag ggccacgtct gcccggtcgg tgcggatgcc
+     8341 ccggccttcc atctccacca cgttcggccc caggtgaaca ccgggcaggc gctcgatgcc
+     8401 ctgcgcctca agtgttctgt ggtcaatgcg ggcgtcgtgg cctgcccgct ctaatgcccg
+     8461 gttggcatgg tcggcccatg cctcgcgggt ctgctcaagc catgccttgg gcttgagcgc
+     8521 ttcggtcttt tgtgccccgc ccttctccgg ggtcttgccg ttgtaccgct tgaaccactg
+     8581 agcggcgggc cgctcgatgc cgtcattgat ccgctcggag atcatcaggt ggcagtgcgg
+     8641 gttctcgccg ccaccggcat ggatggccag cgtatacggc aggcgctcgg caccggtcag
+     8701 gtgctgggcg aactcggacg ccagcgcctt ctgctggtcg agggtcagct cgaccggcag
+     8761 ggcaaattcg acctccttga acagccgccc attggcgcgt tcatacaggt cggcagcatc
+     8821 ccagtagtcg gcgggccgct cgacgaactc cggcatgtgc ccggattcgg cgtgcaagac
+     8881 ttcatccatg tcgcgggcat acttgccttc gcgctggatg tagtcggcct tggccctggc
+     8941 cgattggccg cccgacctgc tgccggtttt cgccgtaagg tgataaatcg ccatgctgcc
+     9001 tcgctgttgc ttttgctttt cggctccatg caatggccct cggagagcgc accgcccgaa
+     9061 gggtggccgt taggccagtt tctcgaagag aaaccggtaa gtgcgccctc ccctacaaag
+     9121 tagggtcggg attgccgccg ctgtgcctcc atgatagcct acgagacagc acattaacaa
+     9181 tggggtgtca agatggttaa ggggagcaac aaggcggcgg atcggctggc caagctcgaa
+     9241 gaacaacgag cgcgaatcaa tgccgaaatt cagcgggtgc gggcaaggga acagcagcaa
+     9301 gagcgcaaga acgaaacaag gcgcaaggtg ctggtggggg ccatgatttt ggccaaggtg
+     9361 aacagcagcg agtggccgga ggatcggctc atggcggcaa tggatgcgta ccttgaacgc
+     9421 gaccacgacc gcgccttgtt cggtctgccg ccacgccaga aggatgagcc gggctgaatg
+     9481 atcgaccgag acaggccctg cgg
+//
