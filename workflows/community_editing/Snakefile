@@ -8,55 +8,41 @@ USAGE:
         fastq_path="../../sequences/reads/DKDTH4_1_MCKanCm_gPCR.fastq" \
         brna_plasmid_file="../../sequences/plasmids/pJRP1063.gbk" 
 NOTE: include --conda-frontend mamba if need to install envs
+    - There are issues with installing the bridgernadesigner via pip using mamba
 """
 
 import os
 from snakemake.io import directory
+import yaml
 
 configfile: "config.yaml"
 
 script_dir = config["script_dir"]
-# script_dir = "../../scripts"
-# wk_dir = config["wk_dir"]
-# fastq_path = config["fastq_path"]
-# max_length = str(config["max_length"])
-# brna_env = "../../envs/brna.yml"
 map_env = "../../envs/map_env.yml"
 qiime2_env = "../../envs/qiime2-amplicon-2024.10-py310-linux-conda.yml"
 
-# LE_file = os.path.join(wk_dir, "input", "LE.fasta")
-
+# Verify that all the right config arguments have been provided
 def required_config(keys):
     for key in keys:
         if key not in config:
             raise ValueError(f"Missing required config key: '{key}'")
 
 required_config(["wk_dir", "fastq_path", "brna_plasmid_file"])
-print(config)
-
 
 rule all:
     input:
-        taxonomy = os.path.join(config["wk_dir"], "taxonomy", "taxonomy_table.tsv")
+        taxonomy = os.path.join(config["wk_dir"], "taxonomy", "taxonomy_table.tsv"),
+        configfile = os.path.join(config["wk_dir"], "config.yaml")
 
 
-# rule check_bridgernadesigner:
-#     conda: map_env
-#     message: "Checking and installing bridgernadesigner if missing..."
-#     output:
-#         "logs/bridgernadesigner_checked.txt"
-#     shell:
-#         """
-#         python -c "
-# import importlib.metadata as importlib_metadata
-# try:
-#     version = importlib_metadata.version('bridgernadesigner')
-#     assert version == '0.0.1'
-# except Exception:
-#     import sys, subprocess
-#     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'bridgernadesigner==0.0.1'])
-#             "
-#         """
+rule save_config:
+    output:
+        dest = os.path.join(config["wk_dir"], "config.yaml")
+    conda:
+        map_env
+    run:
+        with open(output.dest, "w") as f:
+            yaml.dump(config, f, default_flow_style=False)
 
 
 rule extract_le:
