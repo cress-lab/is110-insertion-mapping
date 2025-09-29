@@ -68,14 +68,16 @@ rule amplicon_size_filter:
     input:
         fastq = config["fastq_path"]
     output:
-        reads = os.path.join(config["wk_dir"], "reads.fastq")
+        # TODO: better name than reads.fastq
+        reads = os.path.join(config["wk_dir"], "reads_size_filtered.fastq")
     conda:
         qiime2_env
     shell:
         """
         python {script_dir}/amplicon_size_filter.py \
             -i {input.fastq} \
-            -n {config[max_length]} \
+            -a {config[max_length]} \
+            -b {config[min_length]} \
             -o {config[wk_dir]}
         """
 
