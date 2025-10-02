@@ -30,7 +30,7 @@ def main():
     with open(join(args.output, "reads_size_filtered.fastq"), "w") as f:
         SeqIO.write(records_pass_filter, f, "fastq")
     with open(join(args.output, "reads_fail_size_filters.fastq"), "w") as f:
-        SeqIO.write(records_pass_filter, f, "fastq")
+        SeqIO.write(others, f, "fastq")
 
 if __name__ == "__main__":
     main()
