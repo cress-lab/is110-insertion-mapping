@@ -20,6 +20,8 @@ configfile: "config.yaml"
 script_dir = config["script_dir"]
 map_env = "../../envs/map_env.yml"
 qiime2_env = "../../envs/qiime2-amplicon-2024.10-py310-linux-conda.yml"
+LE_LENGTH = 50
+MIN_LEN_POST_TRIM = config["min_length"] - LE_LENGTH
 
 # Verify that all the right config arguments have been provided
 def required_config(keys):
@@ -60,7 +62,7 @@ rule extract_le:
             -b {input.brna_plasmid_file} \
             -o {config[wk_dir]}/input \
             -m "L" \
-            -n 50
+            -n {LE_LENGTH}
         """
 
 
@@ -68,7 +70,6 @@ rule amplicon_size_filter:
     input:
         fastq = config["fastq_path"]
     output:
-        # TODO: better name than reads.fastq
         reads = os.path.join(config["wk_dir"], "reads_size_filtered.fastq")
     conda:
         qiime2_env
@@ -81,36 +82,74 @@ rule amplicon_size_filter:
             -o {config[wk_dir]}
         """
 
-
 rule cutadapt_trim:
+    """
+    Use cutadapt to find reads with the LE.
+    """
     input:
         reads = rules.amplicon_size_filter.output.reads,
         le = rules.extract_le.output.le 
     output:
-        trimmed = os.path.join(config["wk_dir"], "LE_containing_amplicons.fasta")
+        trimmed = os.path.join(config["wk_dir"], "LE_containing_amplicons_any.fasta")
     conda:
         qiime2_env
     shell:
         """
-        cutadapt -a file:{input.le} --revcomp --fasta --discard-untrimmed -O 10 -j 0 {input.reads} > {output.trimmed}
+        cutadapt \
+            --revcomp \
+            --fasta \
+            --discard-untrimmed \
+            -m {MIN_LEN_POST_TRIM} \
+            -O 10 \
+            -j 0 \
+            -a file:{input.le} \
+            {input.reads} > {output.trimmed}
+        """
+
+rule cutadapt_trim_2:
+    """
+    Use cutadapt to remove trimmed reads that contain another LE, since this 
+    would indicate that the read is a chimera.
+    """
+    input:
+        trimmed = rules.cutadapt_trim.output.trimmed,
+        le = rules.extract_le.output.le
+    output:
+        trimmed_1_le = os.path.join(config["wk_dir"], "LE_containing_amplicons.fasta")
+    conda:
+        qiime2_env
+    shell:
+        """
+        cutadapt \
+            --revcomp \
+            --fasta \
+            --discard-trimmed \
+            -O 10 \
+            -j 0 \
+            -a file:{input.le} \
+            {input.trimmed} > {output.trimmed_1_le}
         """
 
 rule remove_chimeras:
     input:
-        trimmed = rules.cutadapt_trim.output.trimmed
+        trimmed = rules.cutadapt_trim_2.output.trimmed_1_le
     output:
         nonchimeras = os.path.join(config["wk_dir"], "nonchimeras.fasta"),
         chimeras = os.path.join(config["wk_dir"], "chimeras.fasta"),
-        borderline = os.path.join(config["wk_dir"], "borderline.fasta")
+        borderline = os.path.join(config["wk_dir"], "borderline.fasta"),
+        # TEMPORARY: save chimera alignments
+        chimera_aln = os.path.join(config["wk_dir"], "chimera_alns.txt")
     conda:
         qiime2_env
     shell:
         """
         vsearch --uchime_ref {input.trimmed} \
             --db {config[silva_db]} \
+            --threads 0 \
             --nonchimeras {output.nonchimeras} \
             --chimeras {output.chimeras} \
-            --borderline {output.borderline}
+            --borderline {output.borderline} \
+            --uchimealns {output.chimera_aln}
         """
 
 rule qiime_import:
