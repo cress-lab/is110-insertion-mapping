@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import seaborn as sns
-import sys
+import argparse
 import os
 from collections import Counter
 
@@ -161,32 +161,89 @@ def parse_bam(wk_dir, title=""):
     return counts_df, positions_df, total_genome_lengths, title
 
 
-# def main():
-if __name__ == "__main__":
-    # Set a professional style for the plots.
-    sns.set_style("whitegrid")
+def main():
+    parser = argparse.ArgumentParser(
+        description="Visualize insertion mapping results from BAM files",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Basic usage with working directory only
+  python visualize_insertions.py /path/to/workdir
+  
+  # Specify a single target position
+  python visualize_insertions.py /path/to/workdir --target 12345
+  
+  # Specify multiple targets from a file
+  python visualize_insertions.py /path/to/workdir --target targets.txt
+  
+  # Specify target position with custom reference genome name
+  python visualize_insertions.py /path/to/workdir --target 12345 --reference my_genome
+        """
+    )
+    
+    parser.add_argument(
+        'workdir',
+        help='Working directory containing BAM files and analysis results'
+    )
+    
+    parser.add_argument(
+        '--target', '-t',
+        help='Target position(s) to highlight. Can be: '
+             '1) A single integer position, or '
+             '2) A .txt file containing target positions (one per line)'
+    )
+    
+    parser.add_argument(
+        '--reference', '-r',
+        help='Reference genome name (required when target is a single integer)'
+    )
 
-    wk_dir = sys.argv[1]
-    reference_genome_name = sys.argv[2]
-    target_coordinate = int(sys.argv[3]) if len(sys.argv) == 4 else None # 3843421
-
-    out_dir = os.path.join(wk_dir, "plots")
+    parser.add_argument(
+        '--plot_coverage', 
+        action='store_true', default=False,
+        help='Option to make coverage plots. Defaults to false. '
+    )
+    
+    args = parser.parse_args()
+    
+    # Validate arguments
+    if args.target and not args.target.endswith('.txt'):
+        try:
+            int(args.target)
+        except ValueError:
+            parser.error("Target must be either an integer or a .txt file")
+        
+        if not args.reference:
+            parser.error("Reference genome name is required when target is a single integer")
+    
+    # Handle target info
+    targets = None
+    reference_genome_name = args.reference
+    
+    if args.target is not None:
+        if args.target.endswith(".txt"):
+            target_df = pd.read_csv(args.target)
+            reference_genome_name = target_df.columns[0]
+            targets = target_df.iloc[:, 0].astype(int).tolist()
+        else:
+            targets = [int(args.target)]
+    # Loading stuff
+    out_dir = os.path.join(args.workdir, "plots")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir, exist_ok=True)
-
-    counts_df, positions_df, total_genome_lengths, title = parse_bam(wk_dir)
+    counts_df, positions_df, total_genome_lengths, title = parse_bam(args.workdir)
     print("\nStep 5: Creating genome-wide plots...")
     ##### Make the high level insertion map
-
+    sns.set_style("whitegrid")
     for reference in counts_df["reference"].unique():
-
         fig, ax = plot_insertions(
             counts_df[counts_df["reference"]==reference], 
             total_genome_lengths[reference], 
             mode="b")
-        if target_coordinate is not None:
+        if targets is not None:
             if reference == reference_genome_name:
-                plot_triangle(target_coordinate, ax)
+                for t in targets:
+                    plot_triangle(t, ax)
         # if not title:
         title = f"Insertion map for {reference}"
         ax.set_title(title, fontsize=16)
@@ -195,13 +252,11 @@ if __name__ == "__main__":
         # plt.title()
         # plt.show()
 
-    cov_df = pd.read_csv((os.path.join(wk_dir, "raw_reads_coverage.tsv")), sep="\t", header=None)
+    cov_df = pd.read_csv((os.path.join(args.workdir, "raw_reads_coverage.tsv")), sep="\t", header=None)
     cov_df.columns=["chrom", "pos", "depth"]
     cov_df["pos_mb"] = cov_df["pos"] / 1_000_000
     # Subset to only reference genome
     cov_df_ref = cov_df[cov_df["chrom"]==reference_genome_name]
-
-
     for contig in cov_df["chrom"].unique():
         cov_df_contig = cov_df[cov_df["chrom"]==contig]
         # Plot coverage below insetion map
@@ -226,3 +281,7 @@ if __name__ == "__main__":
         plt.tight_layout()
         fig.savefig(os.path.join(out_dir, f"{contig}_coverage.png"))
         # plt.show()
+
+
+if __name__ == "__main__":
+    main()
