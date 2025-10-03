@@ -12,5 +12,6 @@ dependencies:
   - pysam=0.23.3
   - python=3.12.11
   - seaborn=0.13.2
+  - samtools=1.22.1
   - pip:
       - bridgernadesigner==0.0.1
