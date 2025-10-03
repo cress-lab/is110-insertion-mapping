@@ -1,0 +1,294 @@
+LOCUS       pJRP0777                5714 bp    DNA     circular SYN 03-OCT-2025
+DEFINITION  gg370-1.
+ACCESSION   gg370-1
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 5714)
+  AUTHORS   .
+  TITLE     Direct Submission
+  JOURNAL   Exported Oct 3, 2025 from SnapGene 8.1.1
+            https://www.snapgene.com
+COMMENT     Annotated with pLannotate v1.2.2
+FEATURES             Location/Qualifiers
+     source          1..5714
+                     /mol_type="other DNA"
+                     /organism="synthetic DNA construct"
+     misc_feature    503..633
+                     /label=pSpank (no lacI)
+                     /note="color: #a6acb3"
+     promoter        536..657
+                     /label=pSpank
+                     /note="color: #ffffff; direction: RIGHT"
+     protein_bind    609..625
+                     /label=lac operator
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=protein_bind"
+                     /note="color: #31849b"
+     CDS             658..1634
+                     /codon_start=1
+                     /label=IS110-like element IS621 family transposase
+                     /note="color: #993366"
+                     /translation="MEHELHYIGIDTAKEKLDVDVLRPDGRHRTKKFANTTKGHDELVS
+                     WLKGHKIDHAHICIEATGTYMEPVAECLYDAGYIVSVINPALGKAFAQSEGLRNKTDTV
+                     DARMLAEFCRQKRPAAWEAPHPLERALRALVVRHQALTDMHTQELNRTETAREVQRPSI
+                     DAHLLWLEAELKRLEKQIKDLTDDDPDMKHRRKLLESIPGIGEKTSAVLLAYIGLKDRF
+                     AHARQFAAFAGLTPRRYESGSSVRGASRMSKAGHVSLRRALYMPAMVATSKTEWGRAFR
+                     DRLAANGKKGKVILGAMMRKLAQVAYGVLKSGVPFDASRHNPVA"
+     CDS             1676..1855
+                     /label=dgkA (fragment)
+                     /note="pLannotate"
+                     /note="/database=swissprot"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=48.8"
+                     /note="/other=CDS"
+                     /note="color: #993366; direction: RIGHT"
+     misc_feature    1677..1956
+                     /label=P43 promoter
+                     /note="color: #a6acb3"
+     misc_feature    1957..2133
+                     /label=bridge_IS621_T_16S_bhr_3_D_1_GT
+                     /note="color: #a6acb3"
+     ncRNA           2133..2222
+                     /label=HDV ribozyme
+                     /note="pLannotate"
+                     /note="/database=Rfam"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=98.9"
+                     /note="/other=ncRNA"
+                     /note="color: #8fbc8f; direction: RIGHT"
+     misc_feature    2134..2223
+                     /label=HDV Ribozyme
+                     /note="color: #a6acb3; direction: RIGHT"
+     promoter        2322..2340
+                     /label=T7 promoter
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=promoter"
+                     /note="color: #ffffff"
+     misc_feature    2400..2421
+                     /label=Donor_A GT
+                     /note="color: #a6acb3"
+     misc_feature    2422..2439
+                     /label=I-SceI
+                     /note="color: #a6acb3"
+     promoter        2447..2633
+                     
+                     /note="color: #ffffff; direction: RIGHT"
+     RBS             2634..2645
+                     /note="strong bacterial ribosome binding site (Elowitz and 
+                     Leibler, 2000)"
+                     /note="color: #a6acb3"
+     CDS             2652..3365
+                     /label=Superfolder GFP
+                     /note="pLannotate"
+                     /note="/database=fpbase"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=CDS"
+                     /note="color: #993366; direction: RIGHT"
+     CDS             3396..4190
+                     /label=KanR
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=CDS"
+                     /note="color: #993366; direction: RIGHT"
+     promoter        4195..4213
+                     /label=T7 promoter
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=promoter"
+                     /note="color: #ffffff"
+     misc_feature    4273..4294
+                     /label=Donor B (D8)
+                     /note="color: #a6acb3"
+     misc_feature    4274..4294
+                     /label=Donor B
+                     /note="color: #a6acb3"
+     promoter        4317..4337
+                     /label=U6 promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=6.7"
+                     /note="/other=promoter"
+                     /note="color: #ffffff"
+     misc_feature    4338..4345
+                     /label=AsiSI
+                     /note="color: #ff00ff; direction: BOTH"
+     misc_feature    4346..4360
+                     /label=UNS spacer
+                     /note="color: #ffff99"
+     misc_feature    4361..4368
+                     /label=SbfI
+                     /note="color: #ff00ff; direction: BOTH"
+     oriT            complement(4380..4489)
+                     /direction=LEFT
+                     /label=oriT (direction indicates 5' end leading transfer)
+                     /note="incP origin of transfer
+                     
+                     directionality deduced by BFC from plasmid R751 and 
+                     ""Complete Nucleotide Sequence of Birmingham IncPa 
+                     plasmids"" paper"
+                     /note="color: #a6acb3"
+     oriT            complement(4381..4489)
+                     /direction=LEFT
+                     /label=oriT
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=99.1"
+                     /note="/other=oriT"
+                     /note="color: #a6acb3"
+     promoter        4682..4786
+                     /label=AmpR promoter
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=promoter"
+                     /note="color: #ffffff"
+     CDS             4787..5647
+                     /label=AmpR
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=99.7"
+                     /note="/match_length=100.0"
+                     /note="/other=CDS"
+                     /note="color: #993366; direction: RIGHT"
+     misc_feature    join(5657..5682,5683..5714,1..357,358..361)
+                     /label=R6K origin of replication_pJW20
+                     /note="gamma replication origin from E. coli plasmid R6K; 
+                     requires the R6K initiator protein pi for replication"
+                     /note="This feature has 3 segments:
+                        1: 5657 .. 5682 / #00ff00 / annotated on pHLL250
+                        2: 5683 ..  357 / #ffff00 / actual R6K
+                        3:  358 ..  361 / #00ff00 / annotated on pHLL250"
+     rep_origin      join(5683..5714,1..357)
+                     /label=R6K gamma ori
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=rep_origin"
+                     /note="color: #ffff00"
+ORIGIN
+        1 gtacgtacta agctctcatg tttcacgtac taagctctca tgtttaacgt actaagctct
+       61 catgtttaac gaactaaacc ctcatggcta acgtactaag ctctcatggc taacgtacta
+      121 agctctcatg tttcacgtac taagctctca tgtttgaaca ataaaattaa tataaatcag
+      181 caacttaaat agcctctaag gttttaagtt ttataagaaa aaaaagaata tataaggctt
+      241 ttaaagcttt taaggtttaa cggttgtgga caacaagcca gggatgtaac gcactgagaa
+      301 gcccttagag cctctcaaag caattttgag tgacacagga acacttaacg gctgacatgg
+      361 gcaagtttac tcatatatac tttagattga tttaaaactt catttttaat ttaaaaggat
+      421 ctaggtgaag atcctttttg ataatctcat gaccaaaatc ccttaacgtg agttttcgtt
+      481 ccactgacac ctgcccgaac catatccagc aatggcaaga acgttgctcg agggtaaatg
+      541 tgagcactca caattcattt tgcaaaagtt gttgacttta tctacaaggt gtggcataat
+      601 gtgtgtaatt gtgagcggat aacaattaag ctttcggctg aaaggtggtg aactacaatg
+      661 gaacatgaac ttcattatat cggtatcgac accgctaaag agaaactgga tgtcgatgtg
+      721 ttgcgtcctg atggtcgtca tcgcaccaaa aaattcgcta acaccactaa agggcacgat
+      781 gagctggtga gctggctgaa aggtcacaag attgaccatg cgcatatctg catcgaagcg
+      841 accggcacct atatggaacc tgtcgctgag tgcctttacg atgctggcta catagtgtca
+      901 gtcattaatc ctgcgctggg taaagctttc gctcagagtg aaggactgcg taacaagact
+      961 gataccgtgg atgcgcgcat gctggcagag ttctgtcgtc agaagcgccc tgcagcctgg
+     1021 gaagcgcctc acccgcttga acgcgcgttg cgtgccctgg tagtccgcca ccaggcgctg
+     1081 acagatatgc acacgcagga actgaatcgc actgaaacgg cgcgggaagt ccaaagaccg
+     1141 agcattgatg ctcaccttct gtggcttgaa gcagagctga agcgtcttga gaagcagata
+     1201 aaagacctga cagacgatga tccggatatg aaacaccgca ggaaactgct ggaaagcatc
+     1261 ccgggtatcg gagagaaaac atctgcggta ttgctggctt atatcggtct gaaggaccgc
+     1321 ttcgcccatg ccagacagtt cgccgctttt gcgggtctga caccacggcg ttatgaatca
+     1381 ggtagcagtg tgagaggggc gagccggatg agtaaggccg gacatgtgtc gcttcgcagg
+     1441 gcgttgtata tgcccgcaat ggtagccacc agtaagactg agtggggacg ggcgttccgc
+     1501 gaccgtctgg cggctaatgg caagaaagga aaggtgattc tcggcgcgat gatgcgcaag
+     1561 ctggcacagg tggcgtatgg agtgctgaag tcaggcgtgc cgttcgatgc gtcacggcat
+     1621 aatccggtag cggcgtaacg caaaaaaccc cgcttcggcg gggttttttc gcggactgat
+     1681 aggtggtatg ttttcgcttg aacttttaaa tacagccatt gaacatacgg ttgatttaat
+     1741 aactgacaaa catcaccctc ttgctaaagc ggccaaggac gctgccgccg gggctgtttg
+     1801 cgtttttgcc gtgatttcgt gtatcattgg tttacttatt tttttgccaa agctgtaatg
+     1861 gctgaaaatt cttacattta ttttacattt ttagaaatgg gcgtgaaaaa aagcgcgcga
+     1921 ttatgtaaaa tataaagtga tagcggtacc attataagtg cagagaaaat cggccagttt
+     1981 tctctgcctg cagtccgcat gccgtagccg cggttgggtt ctaacctgtg tattacattt
+     2041 atgcagcgga ctgcctttct cccaaagtga taaaccggac agtatgatgg accggttttc
+     2101 ccggtaatcc gtatttacaa ccgtggtttc actatggccg gcatggtccc agcctcctcg
+     2161 ctggcgccgg ctgggcaaca ttccgagggg accgtcctcc tcggtaatgg cgaatgggac
+     2221 ccatgagacg agtctacatt ggtatatgaa cgtctcaagg tcccaaaaaa aaaaccccgc
+     2281 ttcggcgggg tttttttttc gacgtcttaa gacccacgct gtaatacgac tcactatagg
+     2341 ggataagaag agcgctcaac gccgctcttc acagtcgggt atggcagtga gtacgcctta
+     2401 taacagtatg ttgtattatc ctagggataa cagggtaatt cagacgacgt caaattctat
+     2461 cataattgtg gtttcaaaat cggctccgtc gatactatgt tatacgccaa ctttgaaaac
+     2521 aactttgaaa aggctgtttt ctgtatttaa ggttttagaa tgcaaggaac agtgaattgg
+     2581 agttcgtctt gttataatta gcttcttggg gtatctttaa atactgtaga aaaaaagagg
+     2641 agaaaggatt gatgagcaaa ggagaagaac ttttcactgg agttgtccca attcttgttg
+     2701 aattagatgg tgatgttaat gggcacaaat tttctgtccg tggagagggt gaaggtgatg
+     2761 ctacaaacgg aaaactcacc cttaaattta tttgcactac tggaaaacta cctgttccgt
+     2821 ggccaacact tgtcactact ctgacctatg gtgttcaatg cttttcccgt tatccggatc
+     2881 acatgaaacg gcatgacttt ttcaagagtg ccatgcccga aggttatgta caggaacgca
+     2941 ctatatcttt caaagatgac gggacctaca agacgcgtgc tgaagtcaag tttgaaggtg
+     3001 atacccttgt taatcgtatc gagttaaagg gtattgattt taaagaagat ggaaacattc
+     3061 ttggacacaa actcgagtac aactttaact cacacaatgt atacatcacg gcagacaaac
+     3121 aaaagaatgg aatcaaagct aacttcaaaa ttcgccacaa cgttgaagat ggttccgttc
+     3181 aactagcaga ccattatcaa caaaatactc caattggcga tggccctgtc cttttaccag
+     3241 acaaccatta cctgtcgaca caatctgtcc tttcgaaaga tcccaacgaa aagcgtgacc
+     3301 acatggtcct tcttgagttt gtaactgctg ctgggattac acatggcatg gatgagctct
+     3361 acaaaggcgg aggtggctcc ggaggcggcg gttcaatggc taaaatgaga atatcaccgg
+     3421 aattgaaaaa actgatcgaa aaataccgct gcgtaaaaga tacggaagga atgtctcctg
+     3481 ctaaggtata taagctggtg ggagaaaatg aaaacctata tttaaaaatg acggacagcc
+     3541 ggtataaagg gaccacctat gatgtggaac gggaaaagga catgatgcta tggctggaag
+     3601 gaaagctgcc tgttccaaag gtcctgcact ttgaacggca tgatggctgg agcaatctgc
+     3661 tcatgagtga ggccgatggc gtcctttgct cggaagagta tgaagatgaa caaagccctg
+     3721 aaaagattat cgagctgtat gcggagtgca tcaggctctt tcactccatc gacatatcgg
+     3781 attgtcccta tacgaatagc ttagacagcc gcttagccga attggattac ttactgaata
+     3841 acgatctggc cgatgtggat tgcgaaaact gggaagaaga cactccattt aaagatccgc
+     3901 gcgagctgta tgatttttta aagacggaaa agcccgaaga ggaacttgtc ttttcccacg
+     3961 gcgacctggg agacagcaac atctttgtga aagatggcaa agtaagtggc tttattgatc
+     4021 ttgggagaag cggcagggcg gacaagtggt atgacattgc cttctgcgtc cggtcgatca
+     4081 gggaggatat cggggaagaa cagtatgtcg agctattttt tgacttactg gggatcaagc
+     4141 ctgattggga gaaaataaaa tattatattt tactggatga attgttttag gctgtaatac
+     4201 gactcactat aggggataag aagagcgctc aacgccgctc ttcacagtcg ggtatggcag
+     4261 tgagtacgcc ttatacggta gtctaatatt atcccgtagg aggactttgg caggtgcagc
+     4321 acaaaaggaa actcaccgcg atcgccatta ctcgcatcag cctgcaggat tcttgcttat
+     4381 cggccagcct cgcagagcag gattcccgtt gagcaccgcc aggtgcgaat aagggacagt
+     4441 gaagaaggaa cacccgctcg cgggtgggcc tacttcacct atcctgcccg gctgacgccg
+     4501 ttggatacac caaggaaagt ctacacgaac cctttggcaa aatcctgtat atcgtgcgaa
+     4561 aaaggatgga tataccgaaa aaatcgctat aatgaccccg aagcagggtt atgcagcgga
+     4621 aaagaatgtc atgataataa tggtttctta gacgtcaggt ggcacttttc ggggaaatgt
+     4681 gcgcggaacc cctatttgtt tatttttcta aatacattca aatatgtatc cgctcatgag
+     4741 acaataaccc tgataaatgc ttcaataata ttgaaaaagg aagagtatga gtattcaaca
+     4801 tttccgtgtc gcccttattc ccttttttgc ggcattttgc cttcctgttt ttgctcaccc
+     4861 agaaacgctg gtgaaagtaa aagatgctga agatcagttg ggtgcacgag tgggttacat
+     4921 cgaactggat ctcaacagcg gtaagatcct tgagagtttt cgccccgaag aacgttttcc
+     4981 aatgatgagc acttttaaag ttctgctatg tggcgcggta ttatcccgta ttgacgccgg
+     5041 gcaagagcaa ctcggtcgcc gcatacacta ttctcagaat gacttggttg agtactcacc
+     5101 agtcacagaa aagcatctta cggatggcat gacagtaaga gaattatgca gtgctgccat
+     5161 aaccatgagt gataacactg cggccaactt acttctgaca acgatcggag gaccgaagga
+     5221 gctaaccgct tttttgcaca acatggggga tcatgtaact cgccttgatc gttgggaacc
+     5281 ggagctgaat gaagccatac caaacgacga gcgtgacacc acgatgcctg tagcaatggc
+     5341 aacaacgttg cgcaaactat taactggcga actacttact ctagcttccc ggcaacaatt
+     5401 aatagactgg atggaggcgg ataaagttgc aggaccactt ctgcgctcgg cccttccggc
+     5461 tggctggttt attgctgata aatctggagc cggtgagcgt ggctctcgcg gtatcattgc
+     5521 agcactgggg ccagatggta agccctcccg tatcgtagtt atctacacga cggggagtca
+     5581 ggcaactatg gatgaacgaa atagacagat cgctgagata ggtgcctcac tgattaagca
+     5641 ttggtaactg tcagacccgg ccacgatgcg tccggcgtag aggatctgaa gatcagcagt
+     5701 tcaacctgtt gata
+//
