@@ -1,0 +1,144 @@
+"""
+Workflow for mapping insertions against the genome.
+USAGE:
+    snakemake --rerun-incomplete --use-conda --config \
+        wk_dir="path/to/dir" \
+        brna_plasmid="path/to/.gbk" \
+        others="path/to/other1/.gbk path/to/other2/.gbk" \
+        fastq_path="path/to/reads" 
+"""
+
+import os
+
+configfile: "config.yaml"
+
+wk_dir = config["wk_dir"]
+other_seqs = config["others"].split()
+brna_plasmid = config["brna_plasmid"]
+fastq_path = config["fastq_path"]
+script_dir = "../../scripts"
+brna_env = "../../envs/brna.yml"
+print("OTHER_SEQS:", other_seqs)
+
+rule all:
+    input:
+        f"{wk_dir}/aligned_contigs.bam.bai",
+        f"{wk_dir}/raw_reads_aligned.bam.bai",
+        f"{wk_dir}/raw_reads_coverage.tsv",
+        f"{wk_dir}/plots/.plots_complete"
+
+rule extract_insertion_end:
+    input:
+        brna=brna_plasmid,
+        others=other_seqs
+    output:
+        re=f"{wk_dir}/input/RE.fasta",
+        target_sites_file=f"{wk_dir}/input/target_sites.txt"
+        # genome=f"{wk_dir}/input/sequences.fasta"
+    conda:
+        brna_env
+    shell:
+        """
+        mkdir -p {wk_dir}/input
+        python {script_dir}/extract_insertion_end.py \
+            -b {input.brna} \
+            -s {input.others} \
+            -o {wk_dir}/input \
+            --save_targets
+        """
+
+rule genbank_to_fasta:
+    input:
+        rules.extract_insertion_end.output.re,
+        brna=brna_plasmid,
+        others=other_seqs
+    output:
+        fasta=f"{wk_dir}/input/sequences.fasta"
+    conda:
+        brna_env
+    shell:
+        """
+        python {script_dir}/genbank_to_fasta.py {output.fasta} {input.brna} {input.others}
+        """
+
+# TODO: second cutadapt to remove 2x RE reads
+rule cutadapt_extract_re:
+    input:
+        rules.genbank_to_fasta.output.fasta,
+        re=rules.extract_insertion_end.output.re,
+        fastq=fastq_path
+    output:
+        out=f"{wk_dir}/RE_contain_contigs.fasta"
+    conda:
+        brna_env
+    shell:
+        """
+        cutadapt -g "file:{input.re}" --revcomp --fasta --discard-untrimmed -O 20 -j 0 {input.fastq} > {output.out} 
+        """
+
+rule minimap2_re_align:
+    input:
+        rules.cutadapt_extract_re.output.out,
+        sequences=rules.genbank_to_fasta.output.fasta,
+        reads=rules.cutadapt_extract_re.output.out
+    output:
+        bam=f"{wk_dir}/aligned_contigs.bam",
+        bai=f"{wk_dir}/aligned_contigs.bam.bai"
+    conda:
+        brna_env
+    threads: 48
+    shell:
+        """
+        minimap2 -t {threads} -ax map-ont {input.sequences} {input.reads} |
+        samtools view -bS |
+        samtools sort -o {output.bam} -
+        samtools index {output.bam}
+        """
+
+rule minimap2_raw_align:
+    input:
+        rules.minimap2_re_align.output.bam,
+        genome=rules.genbank_to_fasta.output.fasta,
+        reads=fastq_path
+    output:
+        bam=f"{wk_dir}/raw_reads_aligned.bam",
+        bai=f"{wk_dir}/raw_reads_aligned.bam.bai"
+    conda:
+        brna_env
+    threads: 48
+    shell:
+        """
+        minimap2 -t {threads} -ax map-ont {input.genome} {input.reads} |
+        samtools view -bS |
+        samtools sort -o {output.bam} -
+        samtools index {output.bam}
+        """
+
+rule compute_coverage:
+    input:
+        bam=rules.minimap2_raw_align.output.bam
+    output:
+        tsv=f"{wk_dir}/raw_reads_coverage.tsv"
+    conda:
+        brna_env
+    shell:
+        """
+        samtools depth -o {output.tsv} {input.bam}
+        """
+
+rule make_plots:
+    input:
+        target=rules.extract_insertion_end.output.target_sites_file,
+        bam=rules.minimap2_re_align.output.bam,
+        coverage=rules.compute_coverage.output.tsv
+    output:
+        f"{wk_dir}/plots/.plots_complete"
+    conda:
+        brna_env
+    shell:
+        """
+        python {script_dir}/visualize_insertions.py {wk_dir} \
+            -t {input.target} \
+            --plot_coverage
+        touch {output}
+        """
