@@ -17,8 +17,8 @@ other_seqs = config["others"].split()
 brna_plasmid = config["brna_plasmid"]
 fastq_path = config["fastq_path"]
 script_dir = "../../scripts"
-brna_env = "../../envs/brna.yml"
-print("OTHER_SEQS:", other_seqs)
+map_env = "../../envs/map_env.yml"
+# print("OTHER_SEQS:", other_seqs)
 
 rule all:
     input:
@@ -36,7 +36,7 @@ rule extract_insertion_end:
         target_sites_file=f"{wk_dir}/input/target_sites.txt"
         # genome=f"{wk_dir}/input/sequences.fasta"
     conda:
-        brna_env
+        map_env
     shell:
         """
         mkdir -p {wk_dir}/input
@@ -55,7 +55,7 @@ rule genbank_to_fasta:
     output:
         fasta=f"{wk_dir}/input/sequences.fasta"
     conda:
-        brna_env
+        map_env
     shell:
         """
         python {script_dir}/genbank_to_fasta.py {output.fasta} {input.brna} {input.others}
@@ -65,27 +65,52 @@ rule genbank_to_fasta:
 rule cutadapt_extract_re:
     input:
         rules.genbank_to_fasta.output.fasta,
-        re=rules.extract_insertion_end.output.re,
-        fastq=fastq_path
+        re = rules.extract_insertion_end.output.re,
+        fastq = fastq_path
     output:
-        out=f"{wk_dir}/RE_contain_contigs.fasta"
+        out = f"{wk_dir}/RE_contain_contigs_any.fasta"
     conda:
-        brna_env
+        map_env
     shell:
         """
         cutadapt -g "file:{input.re}" --revcomp --fasta --discard-untrimmed -O 20 -j 0 {input.fastq} > {output.out} 
         """
 
+rule cutadapt_trim_2:
+    """
+    Use cutadapt to remove trimmed reads that contain multiple RE sequences
+    """
+    input:
+        trimmed = rules.cutadapt_extract_re.output.out,
+        re = rules.extract_insertion_end.output.re
+    output:
+        # trimmed_1_le = os.path.join(config["wk_dir"], "LE_containing_amplicons.fasta")
+        trimmed_1_re=f"{wk_dir}/RE_contain_contigs.fasta"
+    conda:
+        map_env
+    shell:
+        """
+        cutadapt \
+            --revcomp \
+            --fasta \
+            --discard-trimmed \
+            -O 20 \
+            -j 0 \
+            -a file:{input.re} \
+            {input.trimmed} > {output.trimmed_1_re}
+        """
+
+
 rule minimap2_re_align:
     input:
-        rules.cutadapt_extract_re.output.out,
+        rules.cutadapt_trim_2.output.trimmed_1_re,
         sequences=rules.genbank_to_fasta.output.fasta,
         reads=rules.cutadapt_extract_re.output.out
     output:
         bam=f"{wk_dir}/aligned_contigs.bam",
         bai=f"{wk_dir}/aligned_contigs.bam.bai"
     conda:
-        brna_env
+        map_env
     threads: 48
     shell:
         """
@@ -104,7 +129,7 @@ rule minimap2_raw_align:
         bam=f"{wk_dir}/raw_reads_aligned.bam",
         bai=f"{wk_dir}/raw_reads_aligned.bam.bai"
     conda:
-        brna_env
+        map_env
     threads: 48
     shell:
         """
@@ -120,7 +145,7 @@ rule compute_coverage:
     output:
         tsv=f"{wk_dir}/raw_reads_coverage.tsv"
     conda:
-        brna_env
+        map_env
     shell:
         """
         samtools depth -o {output.tsv} {input.bam}
@@ -134,7 +159,7 @@ rule make_plots:
     output:
         f"{wk_dir}/plots/.plots_complete"
     conda:
-        brna_env
+        map_env
     shell:
         """
         python {script_dir}/visualize_insertions.py {wk_dir} \

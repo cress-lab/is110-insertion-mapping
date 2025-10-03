@@ -47,7 +47,7 @@ class Insertion(BridgeRNAReaction):
         target_index = self._identify_target(seqs, sequence_paths, sequence_records)
         self.target_matches = self.target_matches[target_index] if target_index is not None else self.target_matches
         self.donor_matches = self.donor_matches[target_index] if target_index is not None else self.donor_matches
-        print(f"\n\n\n\t\tFOUND TARGET MATCHES: {self.target_matches}")
+        # print(f"\n\n\n\t\tFOUND TARGET MATCHES: {self.target_matches}")
         assert (target_index != donor_index), "Target and Donor found on same contig, so not an insertion!"
         self.mode = "insertion"
         self._find_donor_site()
@@ -75,6 +75,7 @@ class Insertion(BridgeRNAReaction):
         self.donor_strand, self.donor_start, self.donor_end = self.donor_matches[donor_index][0]
         self.donor_file = os.path.splitext(os.path.basename(sequence_paths[donor_index]))[0]
         self.donor_contig = sequence_records[donor_index]
+        self.donor_name = os.path.splitext(os.path.basename(sequence_paths[donor_index]))[0]
         print(f"Found donor sequence: {self.donor_file}\n\tstrand: {self.donor_strand}")
         return donor_index
     
@@ -105,6 +106,7 @@ class Insertion(BridgeRNAReaction):
             )
         if target_index is not None:
             self.target_contig = sequence_records[target_index]
+            self.target_name = os.path.splitext(os.path.basename(sequence_paths[target_index]))[0]
         return target_index
 
 
@@ -178,9 +180,9 @@ def main():
     # OPTIONAL: Save target indices
     if args.save_targets:
         sites = Experiment.extract_target_positions()
-        print(Experiment.target_contig.name)
+        # print(Experiment.target_name)
         with open(join(args.out_dir, "target_sites.txt"), "w") as f:
-            f.writelines(f"{Experiment.target_contig.name}\n")
+            f.writelines(f"{Experiment.target_name}\n")
             for i in sites:
                 f.writelines(f"{i}\n")
 
