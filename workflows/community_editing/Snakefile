@@ -144,7 +144,7 @@ rule remove_chimeras:
     shell:
         """
         vsearch --uchime_ref {input.trimmed} \
-            --db {config[silva_db]} \
+            --db {config[uchime_db]} \
             --threads 0 \
             --nonchimeras {output.nonchimeras} \
             --chimeras {output.chimeras} \
