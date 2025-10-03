@@ -1,0 +1,5 @@
+# Parameters for test run
+wk_dir: "../../data/smk/C3"
+others: "../../sequences/genomes/sJRP0146.gbk"
+brna_plasmid: "../../sequences/plasmids/pJRP0777.gbk" # As of right now this does not exist
+fastq_path: "../../sequences/reads/HZ9PKV_2_rerun_BHR01-C3-rep1-gDNApop_2.fastq.gz"

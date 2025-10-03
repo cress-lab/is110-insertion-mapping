@@ -61,7 +61,6 @@ rule genbank_to_fasta:
         python {script_dir}/genbank_to_fasta.py {output.fasta} {input.brna} {input.others}
         """
 
-# TODO: second cutadapt to remove 2x RE reads
 rule cutadapt_extract_re:
     input:
         rules.genbank_to_fasta.output.fasta,
@@ -73,7 +72,14 @@ rule cutadapt_extract_re:
         map_env
     shell:
         """
-        cutadapt -g "file:{input.re}" --revcomp --fasta --discard-untrimmed -O 20 -j 0 {input.fastq} > {output.out} 
+        cutadapt \
+            -g "file:{input.re}" \
+            --revcomp --fasta \
+            --discard-untrimmed \
+            -O 20 \
+            -j 0 \
+            -m 1 \
+            {input.fastq} > {output.out} 
         """
 
 rule cutadapt_trim_2:
