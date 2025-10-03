@@ -1,6 +1,8 @@
 data
 misc
 sequences/reads
+sequences/db_16s
 sequences/README.docx
 .snakemake
 __pycache__
+workflows/community_editing/qiime2
