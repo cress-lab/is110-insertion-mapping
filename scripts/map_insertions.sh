@@ -79,7 +79,7 @@ python genbank_to_fasta.py \
 #     exit 1
 # fi
 
-cutadapt -g "file:$re_file" --revcomp -o "$wk_dir/RE_contain_contigs.fasta" --fasta --discard-untrimmed -O 20 -j 0 "$fastq_path"
+cutadapt -g "file:$re_file" --revcomp --fasta --discard-untrimmed -O 20 -j 0 "$fastq_path" > "$wk_dir/RE_contain_contigs.fasta"
 # #Header names are too long, make it shorter
 # seqkit replace \
 #   -p '^([^ ]+).*$' \
