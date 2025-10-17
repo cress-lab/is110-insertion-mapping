@@ -15,7 +15,7 @@ import os
 from snakemake.io import directory
 import yaml
 
-configfile: "config.yaml"
+# configfile: "config.yaml"
 
 script_dir = config["script_dir"]
 map_env = "../../envs/map_env.yml"
