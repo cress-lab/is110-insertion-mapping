@@ -1,4 +1,4 @@
-fastq_path: ../../sequences/reads/DZQ5SF_1_3.fastq
+fastq_path: ../../sequences/reads/DZQ5SF/DZQ5SF_1_3.fastq
 wk_dir: ../../data/community_editing/DZQ5SF_1_3
 
 brna_plasmid_file: ../../sequences/plasmids/pJRP1063.gbk
