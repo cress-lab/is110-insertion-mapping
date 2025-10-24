@@ -1,0 +1,9 @@
+fastq_path: ../../sequences/reads/TFMV97/TFMV97_7_SH1_gDNA17.fastq
+wk_dir: ../../data/community_editing/TFMV97_7_SH1_gDNA17
+
+brna_plasmid_file: ../../sequences/plasmids/pJRP1063.gbk
+script_dir: ../../scripts
+uchime_db: ../../sequences/SILVA_138_SSURef_NR99_tax_silva_trunc.replace-whitespace.first600.fasta
+qiime_classifier: silva-138-99-nb-classifier.qza
+min_length: 400
+max_length: 600

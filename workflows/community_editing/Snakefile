@@ -34,6 +34,8 @@ required_config(["wk_dir", "fastq_path", "brna_plasmid_file"])
 rule all:
     input:
         taxonomy = os.path.join(config["wk_dir"], "taxonomy", "taxonomy_table.tsv"),
+        # taxonomy = rules.process_taxonomy.output.taxonomy_table_processed,
+        logfile = os.path.join(config["wk_dir"], "qc", "summary.txt"),
         configfile = os.path.join(config["wk_dir"], "config.yaml")
 
 
@@ -203,10 +205,22 @@ rule process_taxonomy:
         taxonomy_table = rules.qiime_export_taxonomy.output.taxonomy_table,
         taxonomy_dir = os.path.join(config["wk_dir"], "taxonomy")
     output:
-        os.path.join(config["wk_dir"], "taxonomy", "taxonomy_table.tsv")
+        taxonomy_table_processed = os.path.join(config["wk_dir"], "taxonomy", "taxonomy_table.tsv")
     conda:
         qiime2_env
     shell:
         """
         python {script_dir}/process_taxonomy.py {input.taxonomy_table} {input.taxonomy_dir}
+        """
+
+rule make_logfile:
+    input:
+        rules.process_taxonomy.output.taxonomy_table_processed
+    output:
+        logfile = os.path.join(config["wk_dir"], "qc", "summary.txt")
+    conda:
+        qiime2_env
+    shell:
+        """
+        python {script_dir}/community_edit_qc.py {config[wk_dir]}
         """
