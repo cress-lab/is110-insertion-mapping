@@ -1,0 +1,197 @@
+"""
+Workflow for finding + classifying taxonomy for 16S sequences with insertions 
+from community editing experiments.
+USAGE:
+    snakemake --cores 80 --rerun-incomplete --use-conda \
+    --config \
+        wk_dir="../../data/community_editing/DKDTH4" \
+        fastq_path="../../sequences/reads/DKDTH4_1_MCKanCm_gPCR.fastq" \
+        brna_plasmid_file="../../sequences/plasmids/pJRP1063.gbk" 
+NOTE: include --conda-frontend mamba if need to install envs
+    - There are issues with installing the bridgernadesigner via pip using mamba
+"""
+
+import os
+from snakemake.io import directory
+import yaml
+
+# configfile: "config.yaml"
+
+script_dir = config["script_dir"]
+map_env = "../../envs/map_env.yml"
+qiime2_env = "../../envs/qiime2-amplicon-2024.10-py310-linux-conda.yml"
+INSERT_END_LENGTH = 50
+MIN_LEN_POST_TRIM = config["min_length"] - INSERT_END_LENGTH
+
+# Verify that all the right config arguments have been provided
+def required_config(keys):
+    for key in keys:
+        if key not in config:
+            raise ValueError(f"Missing required config key: '{key}'")
+
+required_config(["wk_dir", "fastq_path", "brna_plasmid_file"])
+
+rule all:
+    input:
+        taxonomy = os.path.join(config["wk_dir"], "taxonomy", "taxonomy_table.tsv"),
+        configfile = os.path.join(config["wk_dir"], "config.yaml")
+
+
+rule save_config:
+    output:
+        dest = os.path.join(config["wk_dir"], "config.yaml")
+    conda:
+        map_env
+    run:
+        with open(output.dest, "w") as f:
+            yaml.dump(config, f, default_flow_style=False)
+
+
+rule extract_le:
+    input:
+        brna_plasmid_file = config["brna_plasmid_file"]
+    output:
+        le = os.path.join(config["wk_dir"], "input", "LE.fasta")
+    conda:
+        map_env
+    shell:
+        """
+        mkdir -p {config[wk_dir]}/input
+        python {script_dir}/extract_insertion_end.py \
+            -b {input.brna_plasmid_file} \
+            -o {config[wk_dir]}/input \
+            -m "L" \
+            -n {INSERT_END_LENGTH}
+        """
+
+
+rule extract_re:
+    input:
+        brna_plasmid_file = config["brna_plasmid_file"]
+    output:
+        re = os.path.join(config["wk_dir"], "input", "RE.fasta")
+    conda:
+        map_env
+    shell:
+        """
+        mkdir -p {config[wk_dir]}/input
+        python {script_dir}/extract_insertion_end.py \
+            -b {input.brna_plasmid_file} \
+            -o {config[wk_dir]}/input \
+            -m "R" \
+            -n {INSERT_END_LENGTH}
+        """
+
+
+rule amplicon_size_filter:
+    input:
+        fastq = config["fastq_path"]
+    output:
+        reads = os.path.join(config["wk_dir"], "reads_size_filtered.fastq")
+    conda:
+        map_env
+    shell:
+        """
+        python {script_dir}/amplicon_size_filter.py \
+            -i {input.fastq} \
+            -a {config[max_length]} \
+            -b {config[min_length]} \
+            -o {config[wk_dir]}
+        """
+
+rule cutadapt_trim_left_end:
+    """
+    Use cutadapt to find reads with the LE.
+    """
+    input:
+        reads = rules.amplicon_size_filter.output.reads,
+        le = rules.extract_le.output.le 
+    output:
+        trimmed = os.path.join(config["wk_dir"], "LE_containing_amplicons_any.fasta")
+    conda:
+        qiime2_env
+    shell:
+        """
+        cutadapt \
+            --revcomp \
+            --fasta \
+            --discard-untrimmed \
+            -m {MIN_LEN_POST_TRIM} \
+            -O 10 \
+            -j 0 \
+            -a file:{input.le} \
+            {input.reads} > {output.trimmed}
+        """
+
+rule cutadapt_trim_left_end_2:
+    """
+    Use cutadapt to remove trimmed reads that contain another LE, since this 
+    would indicate that the read is a chimera.
+    """
+    input:
+        trimmed = rules.cutadapt_trim_left_end.output.trimmed,
+        le = rules.extract_le.output.le
+    output:
+        trimmed_1_le = os.path.join(config["wk_dir"], "LE_containing_amplicons.fasta")
+    conda:
+        qiime2_env
+    shell:
+        """
+        cutadapt \
+            --revcomp \
+            --fasta \
+            --discard-trimmed \
+            -O 10 \
+            -j 0 \
+            -a file:{input.le} \
+            {input.trimmed} > {output.trimmed_1_le}
+        """
+
+
+rule cutadapt_trim_right_end:
+    """
+    Use cutadapt to find reads with the RE.
+    """
+    input:
+        reads = rules.amplicon_size_filter.output.reads,
+        re = rules.extract_re.output.re 
+    output:
+        trimmed = os.path.join(config["wk_dir"], "RE_containing_amplicons_any.fasta")
+    conda:
+        qiime2_env
+    shell:
+        """
+        cutadapt \
+            --revcomp \
+            --fasta \
+            --discard-untrimmed \
+            -m {MIN_LEN_POST_TRIM} \
+            -O 10 \
+            -j 0 \
+            -a file:{input.re} \
+            {input.reads} > {output.trimmed}
+        """
+
+rule cutadapt_trim_right_end_2:
+    """
+    Use cutadapt to remove trimmed reads that contain another RE, since this 
+    would indicate that the read is a chimera.
+    """
+    input:
+        trimmed = rules.cutadapt_trim_left_end.output.trimmed,
+        re = rules.extract_re.output.re
+    output:
+        trimmed_1_re = os.path.join(config["wk_dir"], "RE_containing_amplicons.fasta")
+    conda:
+        map_env
+    shell:
+        """
+        cutadapt \
+            --revcomp \
+            --fasta \
+            --discard-trimmed \
+            -O 10 \
+            -j 0 \
+            -a file:{input.re} \
+            {input.trimmed} > {output.trimmed_1_re}
+        """
