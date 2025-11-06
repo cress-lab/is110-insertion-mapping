@@ -2,98 +2,128 @@
 Workflow for mapping insertions against the genome.
 USAGE:
     snakemake --rerun-incomplete --use-conda --config \
-        wk_dir="path/to/dir" \
-        brna_plasmid="path/to/.gbk" \
+        WK_DIR="path/to/dir" \
+        BRNA_PLASMID_PATH="path/to/.gbk" \
         others="path/to/other1/.gbk path/to/other2/.gbk" \
-        fastq_path="path/to/reads" 
+        FASTQ_PATH="path/to/reads" 
 """
-
 import os
 
-configfile: "config.yaml"
+WK_DIR = config["wk_dir"]
+BRNA_PLASMID_PATH = config["brna_plasmid"]
+OTHER_SEQUENCE_PATHS = config["others"]#.split()
+FASTQ_PATH = config["fastq_path"]
+INSERTION_END_TO_EXTRACT = config.get("insertion_end_to_extract", "R") # Default to extracting RE
+INSERT_END_LENGTH = config.get("insert_end_length", 200) # How much of the insertion end to extract
+COMPUTE_COVERAGE = config.get('compute_coverage', False)
+QUALITY_FILTER = config.get("quality_filter", -1) # Default to no quality filtering
+MIN_TRIMMED_READ_LENGTH = config.get("min_trimmed_read_length", 1) # Default minimum trimmed read length
 
-wk_dir = config["wk_dir"]
-other_seqs = config["others"].split()
-brna_plasmid = config["brna_plasmid"]
-fastq_path = config["fastq_path"]
-script_dir = "../../scripts"
-map_env = "../../envs/map_env.yml"
-# print("OTHER_SEQS:", other_seqs)
+SCRIPT_DIR = "../../scripts"
+MAP_ENV = "../../envs/map_env.yml"
+
+
+def cutadapt_end_option(end):
+    if end == "R":
+        return "g"
+    elif end == "L":
+        return "a"
+    else:
+        raise ValueError(f"Invalid end: {end}")
+
 
 rule all:
     input:
-        f"{wk_dir}/aligned_contigs.bam.bai",
-        f"{wk_dir}/raw_reads_aligned.bam.bai",
-        f"{wk_dir}/raw_reads_coverage.tsv",
-        f"{wk_dir}/plots/.plots_complete"
+        f"{WK_DIR}/aligned_contigs.bam.bai",
+        f"{WK_DIR}/plots/.plots_complete"
+
 
 rule extract_insertion_end:
     input:
-        brna=brna_plasmid,
-        others=other_seqs
+        brna=BRNA_PLASMID_PATH,
+        others=OTHER_SEQUENCE_PATHS
     output:
-        re=f"{wk_dir}/input/RE.fasta",
-        target_sites_file=f"{wk_dir}/input/target_sites.txt"
-        # genome=f"{wk_dir}/input/sequences.fasta"
+        end_file=f"{WK_DIR}/input/{INSERTION_END_TO_EXTRACT}E.fasta", # NOTE: this won't work if multiple ends are extracted!!
+        target_sites_file=f"{WK_DIR}/input/target_sites.tsv"
     conda:
-        map_env
+        MAP_ENV
     shell:
         """
-        mkdir -p {wk_dir}/input
-        python {script_dir}/extract_insertion_end.py \
+        mkdir -p {WK_DIR}/input
+        python {SCRIPT_DIR}/extract_insertion_end.py \
             -b {input.brna} \
             -s {input.others} \
-            -o {wk_dir}/input \
+            -o {WK_DIR}/input \
+            -n {INSERT_END_LENGTH} \
+            -m {INSERTION_END_TO_EXTRACT} \
             --save_targets
         """
 
+
 rule genbank_to_fasta:
     input:
-        rules.extract_insertion_end.output.re,
-        brna=brna_plasmid,
-        others=other_seqs
+        rules.extract_insertion_end.output.end_file,
+        brna=BRNA_PLASMID_PATH,
+        others=OTHER_SEQUENCE_PATHS
     output:
-        fasta=f"{wk_dir}/input/sequences.fasta"
+        fasta=f"{WK_DIR}/input/sequences.fasta"
     conda:
-        map_env
+        MAP_ENV
     shell:
         """
-        python {script_dir}/genbank_to_fasta.py {output.fasta} {input.brna} {input.others}
+        python {SCRIPT_DIR}/genbank_to_fasta.py {output.fasta} {input.brna} {input.others}
         """
 
-rule cutadapt_extract_re:
+rule filter_read_quality:
+    input:
+        fastq=FASTQ_PATH
+    output:
+        reads_quality_filtered=f"{WK_DIR}/reads_quality_filtered.fastq"
+    conda:
+        MAP_ENV
+    shell:
+        """
+        seqkit seq -Q {QUALITY_FILTER} -o {output.reads_quality_filtered} {input.fastq}
+        """
+
+
+rule cutadapt_extract_insertions:
     input:
         rules.genbank_to_fasta.output.fasta,
-        re = rules.extract_insertion_end.output.re,
-        fastq = fastq_path
+        end_file = rules.extract_insertion_end.output.end_file,
+        # fastq = lambda wildcards: rules.filter_read_quality.output.reads_quality_filtered if config.get("quality_filter", False) else FASTQ_PATH
+        fastq = rules.filter_read_quality.output.reads_quality_filtered
     output:
-        out = f"{wk_dir}/RE_contain_contigs_any.fasta"
+        out = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_contigs_any.fasta"
     conda:
-        map_env
+        MAP_ENV
+    params:
+        end_option = lambda wildcards: cutadapt_end_option(INSERTION_END_TO_EXTRACT)
     shell:
         """
         cutadapt \
-            -g "file:{input.re}" \
+            -{params.end_option} "file:{input.end_file}" \
             --revcomp --fasta \
             --discard-untrimmed \
             -O 20 \
             -j 0 \
-            -m 1 \
+            -m {MIN_TRIMMED_READ_LENGTH} \
             {input.fastq} > {output.out} 
         """
 
 rule cutadapt_trim_2:
     """
-    Use cutadapt to remove trimmed reads that contain multiple RE sequences
+    Use cutadapt to remove trimmed reads that contain multiple insertion ends. 
     """
     input:
-        trimmed = rules.cutadapt_extract_re.output.out,
-        re = rules.extract_insertion_end.output.re
+        trimmed = rules.cutadapt_extract_insertions.output.out,
+        end_file = rules.extract_insertion_end.output.end_file
     output:
-        # trimmed_1_le = os.path.join(config["wk_dir"], "LE_containing_amplicons.fasta")
-        trimmed_1_re=f"{wk_dir}/RE_contain_contigs.fasta"
+        trimmed_1_insert=f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_contigs.fasta"
     conda:
-        map_env
+        MAP_ENV
+    params:
+        end_option = lambda wildcards: cutadapt_end_option(INSERTION_END_TO_EXTRACT)
     shell:
         """
         cutadapt \
@@ -102,21 +132,21 @@ rule cutadapt_trim_2:
             --discard-trimmed \
             -O 20 \
             -j 0 \
-            -a file:{input.re} \
-            {input.trimmed} > {output.trimmed_1_re}
+            -{params.end_option} file:{input.end_file} \
+            {input.trimmed} > {output.trimmed_1_insert}
         """
 
 
-rule minimap2_re_align:
+rule map_insertions:
     input:
-        rules.cutadapt_trim_2.output.trimmed_1_re,
+        rules.cutadapt_trim_2.output.trimmed_1_insert,
         sequences=rules.genbank_to_fasta.output.fasta,
-        reads=rules.cutadapt_extract_re.output.out
+        reads=rules.cutadapt_extract_insertions.output.out
     output:
-        bam=f"{wk_dir}/aligned_contigs.bam",
-        bai=f"{wk_dir}/aligned_contigs.bam.bai"
+        bam=f"{WK_DIR}/aligned_contigs.bam",
+        bai=f"{WK_DIR}/aligned_contigs.bam.bai"
     conda:
-        map_env
+        MAP_ENV
     threads: 48
     shell:
         """
@@ -126,50 +156,59 @@ rule minimap2_re_align:
         samtools index {output.bam}
         """
 
-rule minimap2_raw_align:
-    input:
-        rules.minimap2_re_align.output.bam,
-        genome=rules.genbank_to_fasta.output.fasta,
-        reads=fastq_path
-    output:
-        bam=f"{wk_dir}/raw_reads_aligned.bam",
-        bai=f"{wk_dir}/raw_reads_aligned.bam.bai"
-    conda:
-        map_env
-    threads: 48
-    shell:
-        """
-        minimap2 -t {threads} -ax map-ont {input.genome} {input.reads} |
-        samtools view -bS |
-        samtools sort -o {output.bam} -
-        samtools index {output.bam}
-        """
 
-rule compute_coverage:
+rule optional_compute_coverage:
     input:
-        bam=rules.minimap2_raw_align.output.bam
+        rules.map_insertions.output.bam,
+        genome=rules.genbank_to_fasta.output.fasta,
+        reads=FASTQ_PATH
     output:
-        tsv=f"{wk_dir}/raw_reads_coverage.tsv"
+        cov_complete=f"{WK_DIR}/.coverage_complete"
+    
     conda:
-        map_env
-    shell:
+        MAP_ENV
+    threads: 48
+    run:
+        bam=f"{WK_DIR}/raw_reads_aligned.bam"
+        bai=f"{WK_DIR}/raw_reads_aligned.bam.bai"
+        tsv=f"{WK_DIR}/raw_reads_coverage.tsv"
+        coverage_calculation_cmd=f"""
+            minimap2 -t {threads} -ax map-ont {input.genome} {input.reads} |
+            samtools view -bS |
+            samtools sort -o {bam} -
+            samtools index {bam}
+            samtools depth -o {tsv} {bam}
+            touch {output.cov_complete}
         """
-        samtools depth -o {output.tsv} {input.bam}
+        skip_calculation_cmd=f"""
+            touch {output.cov_complete}
         """
+        if COMPUTE_COVERAGE:
+            shell(coverage_calculation_cmd)
+        else:   
+            shell(skip_calculation_cmd)
+
 
 rule make_plots:
     input:
+        rules.optional_compute_coverage.output.cov_complete,
         target=rules.extract_insertion_end.output.target_sites_file,
-        bam=rules.minimap2_re_align.output.bam,
-        coverage=rules.compute_coverage.output.tsv
+        bam=rules.map_insertions.output.bam
     output:
-        f"{wk_dir}/plots/.plots_complete"
+        plots_complete=f"{WK_DIR}/plots/.plots_complete"
     conda:
-        map_env
-    shell:
-        """
-        python {script_dir}/visualize_insertions.py {wk_dir} \
-            -t {input.target} \
-            --plot_coverage
-        touch {output}
-        """
+        MAP_ENV
+    run:
+        if COMPUTE_COVERAGE:
+            shell(f"""
+                python {SCRIPT_DIR}/visualize_insertions.py {WK_DIR} \
+                    -t {input.target} \
+                    --plot_coverage
+                touch {output.plots_complete}
+            """)
+        else:
+            shell(f"""
+                python {SCRIPT_DIR}/visualize_insertions.py {WK_DIR} \
+                    -t {input.target}
+                touch {output.plots_complete}
+            """)

@@ -14,7 +14,8 @@ def genbank_to_fasta(output_file, input_files):
                 new_id = f"{base_name}_{i+1}" if i > 0 else base_name
                 new_record = SeqRecord(
                     seq=record.seq,
-                    id=new_id,
+                    id=record.name,
+                    # id=new_id,
                     description=""
                 )
                 SeqIO.write(new_record, fasta_out, "fasta")
