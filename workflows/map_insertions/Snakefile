@@ -18,6 +18,7 @@ INSERT_END_LENGTH = config.get("insert_end_length", 200) # How much of the inser
 COMPUTE_COVERAGE = config.get('compute_coverage', False)
 QUALITY_FILTER = config.get("quality_filter", -1) # Default to no quality filtering
 MIN_TRIMMED_READ_LENGTH = config.get("min_trimmed_read_length", 1) # Default minimum trimmed read length
+FASTA_16S = config.get("fasta_16s", False) # Whether to explicitly map reads to 16S vs genomes
 
 SCRIPT_DIR = "../../scripts"
 MAP_ENV = "../../envs/map_env.yml"
@@ -35,7 +36,8 @@ def cutadapt_end_option(end):
 rule all:
     input:
         f"{WK_DIR}/aligned_contigs.bam.bai",
-        f"{WK_DIR}/plots/.plots_complete"
+        f"{WK_DIR}/plots/.plots_complete",
+        f"{WK_DIR}/mapping_16s/.16S_mapping_complete"
 
 
 rule extract_insertion_end:
@@ -78,13 +80,21 @@ rule filter_read_quality:
     input:
         fastq=FASTQ_PATH
     output:
-        reads_quality_filtered=f"{WK_DIR}/reads_quality_filtered.fastq"
+        reads_quality_filtered=f"{WK_DIR}/reads_quality_filtered.fastq",
+        low_quality_reads=f"{WK_DIR}/reads_low_quality.fastq"
     conda:
         MAP_ENV
     shell:
         """
-        seqkit seq -Q {QUALITY_FILTER} -o {output.reads_quality_filtered} {input.fastq}
+        cutadapt -q {QUALITY_FILTER},{QUALITY_FILTER} {input.fastq} | seqkit seq -Q {QUALITY_FILTER} -o {output.reads_quality_filtered}
+        # Extract low quality reads too for record-keeping
+        seqkit seq -n {output.reads_quality_filtered} > high_quality_ids.tmp
+        seqkit grep -v -f high_quality_ids.tmp {input.fastq} > {output.low_quality_reads}
+        rm high_quality_ids.tmp
         """
+        # cutadapt -q {QUALITY_FILTER},{QUALITY_FILTER} {input.fastq} | tee >( \
+        # seqkit seq -Q {QUALITY_FILTER} -o {output.reads_quality_filtered} ) | \
+        # seqkit seq -Q {QUALITY_FILTER} -v -o {output.reads_failing_quality}
 
 
 rule cutadapt_extract_insertions:
@@ -94,7 +104,9 @@ rule cutadapt_extract_insertions:
         # fastq = lambda wildcards: rules.filter_read_quality.output.reads_quality_filtered if config.get("quality_filter", False) else FASTQ_PATH
         fastq = rules.filter_read_quality.output.reads_quality_filtered
     output:
-        out = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_contigs_any.fasta"
+        reads_with_insertion = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads_any.fasta",
+        reads_no_insertion = f"{WK_DIR}/reads_no_insertion.fasta",
+        reads_too_short = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads_below_{MIN_TRIMMED_READ_LENGTH}nt.fasta"
     conda:
         MAP_ENV
     params:
@@ -104,11 +116,12 @@ rule cutadapt_extract_insertions:
         cutadapt \
             -{params.end_option} "file:{input.end_file}" \
             --revcomp --fasta \
-            --discard-untrimmed \
+            --untrimmed-output {output.reads_no_insertion} \
+            --too-short-output {output.reads_too_short} \
             -O 20 \
             -j 0 \
             -m {MIN_TRIMMED_READ_LENGTH} \
-            {input.fastq} > {output.out} 
+            {input.fastq} > {output.reads_with_insertion}
         """
 
 rule cutadapt_trim_2:
@@ -116,10 +129,11 @@ rule cutadapt_trim_2:
     Use cutadapt to remove trimmed reads that contain multiple insertion ends. 
     """
     input:
-        trimmed = rules.cutadapt_extract_insertions.output.out,
+        trimmed = rules.cutadapt_extract_insertions.output.reads_with_insertion,
         end_file = rules.extract_insertion_end.output.end_file
     output:
-        trimmed_1_insert=f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_contigs.fasta"
+        trimmed_1_insert=f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads.fasta",
+        # full_reads_with_1_insertion = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads.full_reads.fasta",
     conda:
         MAP_ENV
     params:
@@ -135,13 +149,17 @@ rule cutadapt_trim_2:
             -{params.end_option} file:{input.end_file} \
             {input.trimmed} > {output.trimmed_1_insert}
         """
+        # # Get the full reads corresponding to the trimmed reads with insertions (for record-keeping)
+        # seqkit seq -n {output.trimmed_1_insert} | sed 's/ rc$//' > trimmed_ids.tmp
+        # seqkit grep -f trimmed_ids.tmp {FASTQ_PATH} -o {output.full_reads_with_1_insertion}
+        # # rm trimmed_ids.tmp
 
 
 rule map_insertions:
     input:
         rules.cutadapt_trim_2.output.trimmed_1_insert,
         sequences=rules.genbank_to_fasta.output.fasta,
-        reads=rules.cutadapt_extract_insertions.output.out
+        reads=rules.cutadapt_extract_insertions.output.reads_with_insertion
     output:
         bam=f"{WK_DIR}/aligned_contigs.bam",
         bai=f"{WK_DIR}/aligned_contigs.bam.bai"
@@ -212,3 +230,62 @@ rule make_plots:
                     -t {input.target}
                 touch {output.plots_complete}
             """)
+
+
+rule map_16s_vs_genomes:
+    input:
+        rules.optional_compute_coverage.output.cov_complete,
+        reads=rules.cutadapt_trim_2.output.trimmed_1_insert,
+        genomes=rules.genbank_to_fasta.output.fasta,
+
+    output:
+        mapping_complete=f"{WK_DIR}/mapping_16s/.16S_mapping_complete"
+    conda:
+        MAP_ENV
+    threads: 48
+    run:
+        if FASTA_16S:
+            print("Mapping to 16S sequences as well as genomes")
+            shell(f"""
+                {SCRIPT_DIR}/map_16S.sh {input.reads} {FASTA_16S} {input.genomes}
+                python {SCRIPT_DIR}/summarize_16S_mapping.py {WK_DIR}
+                touch {output.mapping_complete}
+                """)
+            # Make a summary of fasta sizes
+            from Bio import SeqIO
+            import glob
+            import sys
+
+            # Glob within any subfolder in WK_DIR
+            excluded_dir = "input"
+
+            fasta_files = [
+                f for f in glob.glob(f"{WK_DIR}/**/*.fasta", recursive=True)
+                if excluded_dir not in f.split(os.sep)
+            ]
+            fastq_files = [
+                f for f in glob.glob(f"{WK_DIR}/**/*.fastq", recursive=True)
+                if excluded_dir not in f.split(os.sep)
+            ]
+            fastq_files.append(FASTQ_PATH)
+            # fasta_files = glob.glob(f"{WK_DIR}/**/*.fasta", recursive=True)
+            with open(os.path.join(WK_DIR, "read_counts.txt"), "w") as summary_file:
+                for file in fasta_files:
+                    # Count sequences in the file
+                    count = sum(1 for _ in SeqIO.parse(file, "fasta"))
+                    # print(f"{file}: {count} sequences", file=summary_file)
+                    print(f"{os.path.basename(file)}: {count} sequences", file=summary_file)
+                for file in fastq_files:
+                    # Count sequences in the file
+                    count = sum(1 for _ in SeqIO.parse(file, "fastq"))
+                    # print(f"{file}: {count} sequences", file=summary_file)
+                    print(f"{os.path.basename(file)}: {count} sequences", file=summary_file)
+        else:
+            shell(f"touch {output.mapping_complete}")
+    # shell:
+    #     """
+    #     minimap2 -t {threads} -ax map-ont {input.sequences} {input.out} |
+    #     samtools view -bS |
+    #     samtools sort -o {output.bam} -
+    #     samtools index {output.bam}
+    #     """
