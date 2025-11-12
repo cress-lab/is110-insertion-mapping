@@ -1,0 +1,9 @@
+wk_dir: "../../data/smk/XV9F4R_1_SH1_gDNA1"
+others: "../../sequences/genomes/SH1_comm/SH1.gbk"
+brna_plasmid: ["../../sequences/plasmids/pJRP1063.gbk", "../../sequences/plasmids/pJRP1155_ggJRP0647_AOB_InSilico.gbk"]
+fastq_path: "../../sequences/reads/community_ap_pcr/XV9F4R/XV9F4R_1_SH1_gDNA1.fastq"
+insert_end_length: 28
+insertion_end_to_extract: "L"
+min_trimmed_read_length: 50
+quality_filter: 20
+fasta_16s: "../../sequences/genomes/SH1_comm/SH1_16S.fna"

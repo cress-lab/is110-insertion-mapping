@@ -1,0 +1,9 @@
+wk_dir: ../../data/smk/FG5TP9/FG5TP9_8_rerun_H3_gDNA5_8
+fastq_path: ../../sequences/reads/community_ap_pcr/FG5TP9/FG5TP9_8_rerun_H3_gDNA5_8.fastq
+others: ["../../sequences/genomes/H3_comm/Bacteroides_thetaiotaomicron_strain_VPI-2808B.gb", "../../sequences/genomes/H3_comm/Escherichia_coli_strain_LR-06.gb"]
+brna_plasmid: ["../../sequences/plasmids/pJRP1063.gbk", "../../sequences/plasmids/pJRP1155_ggJRP0647_AOB_InSilico.gbk"]
+insert_end_length: 28
+insertion_end_to_extract: "L"
+min_trimmed_read_length: 50
+quality_filter: 20
+fasta_16s: "../../sequences/genomes/H3_comm/H3_16S.fna"
