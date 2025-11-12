@@ -44,7 +44,9 @@ def parse_bam(alignment_file):
                 if not read.is_secondary and not read.is_supplementary:
                     multimapped_reads.add(read.query_name)
             else:
-                # if read.is_secondary or read.is_supplementary:
+                if read.is_secondary or read.is_supplementary:
+                    print(f"Skipping {read.query_name} (both primary and secondary/supplementary)")
+                    continue
                 #     raise ValueError(
                 #         "Read cannot be both primary and secondary/supplementary."
                 #         )
