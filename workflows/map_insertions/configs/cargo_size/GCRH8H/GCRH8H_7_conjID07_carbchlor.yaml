@@ -1,0 +1,8 @@
+wk_dir: ../../data/smk/GCRH8H/GCRH8H_7_conjID07_carbchlor
+fastq_path: ../../sequences/reads/cargo_size/GCRH8H/GCRH8H_7_conjID07_carbchlor.fastq.gz
+others: ['../../sequences/genomes/gSES0128.gbk', '../../sequences/bacs/pSES0126.gbk']
+brna_plasmid: '../../sequences/plasmids/pSES0099.gbk'
+compute_coverage: True
+insertion_end_to_extract: 'R'
+# quality_filter: 20
+insert_end_length: 200
