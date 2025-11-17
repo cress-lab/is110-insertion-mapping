@@ -1,11 +1,5 @@
 """
 Workflow for mapping insertions against the genome.
-USAGE:
-    snakemake --rerun-incomplete --use-conda --config \
-        WK_DIR="path/to/dir" \
-        BRNA_PLASMID_PATH="path/to/.gbk" \
-        others="path/to/other1/.gbk path/to/other2/.gbk" \
-        FASTQ_PATH="path/to/reads" 
 """
 import os
 
@@ -16,7 +10,7 @@ FASTQ_PATH = config["fastq_path"]
 INSERTION_END_TO_EXTRACT = config.get("insertion_end_to_extract", "R") # Default to extracting RE
 INSERT_END_LENGTH = config.get("insert_end_length", 200) # How much of the insertion end to extract
 COMPUTE_COVERAGE = config.get('compute_coverage', False)
-QUALITY_FILTER = config.get("quality_filter", -1) # Default to no quality filtering
+QUALITY_FILTER = config.get("quality_filter", 0) # Default to no quality filtering
 MIN_TRIMMED_READ_LENGTH = config.get("min_trimmed_read_length", 1) # Default minimum trimmed read length
 FASTA_16S = config.get("fasta_16s", False) # Whether to explicitly map reads to 16S vs genomes
 
@@ -81,27 +75,23 @@ rule filter_read_quality:
         fastq=FASTQ_PATH
     output:
         reads_quality_filtered=f"{WK_DIR}/reads_quality_filtered.fastq",
-        low_quality_reads=f"{WK_DIR}/reads_low_quality.fastq"
+        # low_quality_reads=f"{WK_DIR}/reads_low_quality.fastq"
     conda:
         MAP_ENV
     shell:
         """
         cutadapt -q {QUALITY_FILTER},{QUALITY_FILTER} {input.fastq} | seqkit seq -Q {QUALITY_FILTER} -o {output.reads_quality_filtered}
-        # Extract low quality reads too for record-keeping
-        seqkit seq -n {output.reads_quality_filtered} > high_quality_ids.tmp
-        seqkit grep -v -f high_quality_ids.tmp {input.fastq} > {output.low_quality_reads}
-        rm high_quality_ids.tmp
         """
-        # cutadapt -q {QUALITY_FILTER},{QUALITY_FILTER} {input.fastq} | tee >( \
-        # seqkit seq -Q {QUALITY_FILTER} -o {output.reads_quality_filtered} ) | \
-        # seqkit seq -Q {QUALITY_FILTER} -v -o {output.reads_failing_quality}
+        # # Extract low quality reads too for record-keeping # NOTE: doesn't work currently...
+        # seqkit seq -n {output.reads_quality_filtered} > high_quality_ids.tmp
+        # seqkit grep -v -f high_quality_ids.tmp {input.fastq} > {output.low_quality_reads}
+        # rm high_quality_ids.tmp
 
 
 rule cutadapt_extract_insertions:
     input:
         rules.genbank_to_fasta.output.fasta,
         end_file = rules.extract_insertion_end.output.end_file,
-        # fastq = lambda wildcards: rules.filter_read_quality.output.reads_quality_filtered if config.get("quality_filter", False) else FASTQ_PATH
         fastq = rules.filter_read_quality.output.reads_quality_filtered
     output:
         reads_with_insertion = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads_any.fasta",
@@ -251,37 +241,43 @@ rule map_16s_vs_genomes:
                 python {SCRIPT_DIR}/summarize_16S_mapping.py {WK_DIR}
                 touch {output.mapping_complete}
                 """)
-            # Make a summary of fasta sizes
-            from Bio import SeqIO
-            import glob
-            import sys
-
-            # Glob within any subfolder in WK_DIR
-            excluded_dir = "input"
-
-            fasta_files = [
-                f for f in glob.glob(f"{WK_DIR}/**/*.fasta", recursive=True)
-                if excluded_dir not in f.split(os.sep)
-            ]
-            fastq_files = [
-                f for f in glob.glob(f"{WK_DIR}/**/*.fastq", recursive=True)
-                if excluded_dir not in f.split(os.sep)
-            ]
-            fastq_files.append(FASTQ_PATH)
-            # fasta_files = glob.glob(f"{WK_DIR}/**/*.fasta", recursive=True)
-            with open(os.path.join(WK_DIR, "read_counts.txt"), "w") as summary_file:
-                for file in fasta_files:
-                    # Count sequences in the file
-                    count = sum(1 for _ in SeqIO.parse(file, "fasta"))
-                    # print(f"{file}: {count} sequences", file=summary_file)
-                    print(f"{os.path.basename(file)}: {count} sequences", file=summary_file)
-                for file in fastq_files:
-                    # Count sequences in the file
-                    count = sum(1 for _ in SeqIO.parse(file, "fastq"))
-                    # print(f"{file}: {count} sequences", file=summary_file)
-                    print(f"{os.path.basename(file)}: {count} sequences", file=summary_file)
         else:
             shell(f"touch {output.mapping_complete}")
+        # Make a summary of fasta sizes
+        from Bio import SeqIO
+        import glob
+        import sys
+        import gzip
+
+        def open_maybe_gzip(path, mode="rt"):
+            return gzip.open(path, mode) if path.endswith(".gz") else open(path, mode)
+
+        # Glob within any subfolder in WK_DIR
+        excluded_dir = "input"
+
+        fasta_files = [
+            f for f in glob.glob(f"{WK_DIR}/**/*.fasta*", recursive=True)
+            if excluded_dir not in f.split(os.sep)
+        ]
+        fastq_files = [
+            f for f in glob.glob(f"{WK_DIR}/**/*.fastq*", recursive=True)
+            if excluded_dir not in f.split(os.sep)
+        ]
+        fastq_files.append(FASTQ_PATH)
+        # fasta_files = glob.glob(f"{WK_DIR}/**/*.fasta", recursive=True)
+        with open(os.path.join(WK_DIR, "read_counts.txt"), "w") as summary_file:
+            for file in fasta_files:
+                with open_maybe_gzip(file, "rt") as handle:
+                    # Count sequences in the file
+                    count = sum([1 for _ in SeqIO.parse(handle, "fasta")])
+                    # print(f"{file}: {count} sequences", file=summary_file)
+                print(f"{os.path.basename(file)}: {count} sequences", file=summary_file)
+            for file in fastq_files:
+                with open_maybe_gzip(file, "rt") as handle:
+                    # Count sequences in the file
+                    count = sum([1 for _ in SeqIO.parse(handle, "fastq")])
+                # print(f"{file}: {count} sequences", file=summary_file)
+                print(f"{os.path.basename(file)}: {count} sequences", file=summary_file)
     # shell:
     #     """
     #     minimap2 -t {threads} -ax map-ont {input.sequences} {input.out} |
