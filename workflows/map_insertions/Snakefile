@@ -1,11 +1,15 @@
 """
-Workflow for mapping insertions against the genome.
+Workflow for mapping insertions against the genome. Developed with snakemake 9.3
 """
 import os
+from Bio import SeqIO
+import glob
+import sys
+import gzip
 
 WK_DIR = config["wk_dir"]
 BRNA_PLASMID_PATH = config["brna_plasmid"]
-OTHER_SEQUENCE_PATHS = config["others"]#.split()
+OTHER_SEQUENCE_PATHS = config["others"]
 FASTQ_PATH = config["fastq_path"]
 INSERTION_END_TO_EXTRACT = config.get("insertion_end_to_extract", "R") # Default to extracting RE
 INSERT_END_LENGTH = config.get("insert_end_length", 200) # How much of the insertion end to extract
@@ -29,24 +33,29 @@ def cutadapt_end_option(end):
 
 rule all:
     input:
-        f"{WK_DIR}/aligned_contigs.bam.bai",
         f"{WK_DIR}/plots/.plots_complete",
-        f"{WK_DIR}/mapping_16s/.16S_mapping_complete"
+        os.path.join(WK_DIR, "read_counts.txt"),
+        f"{WK_DIR}/.blastn_complete", # NOTE: TEMPORARY BLASTN SANITY CHECK
 
 
 rule extract_insertion_end:
+    """
+    Scans provided sequence files for bRNA and extracts either the upstream (LE)
+    or downstream (RE) end of the resulting insertion sequence. 
+    """
     input:
         brna=BRNA_PLASMID_PATH,
-        others=OTHER_SEQUENCE_PATHS
+        others=OTHER_SEQUENCE_PATHS,
+        extract_insertion_end_script=f"{SCRIPT_DIR}/extract_insertion_end.py"
     output:
-        end_file=f"{WK_DIR}/input/{INSERTION_END_TO_EXTRACT}E.fasta", # NOTE: this won't work if multiple ends are extracted!!
+        end_file=f"{WK_DIR}/input/{INSERTION_END_TO_EXTRACT}E.fasta",
         target_sites_file=f"{WK_DIR}/input/target_sites.tsv"
     conda:
         MAP_ENV
     shell:
         """
         mkdir -p {WK_DIR}/input
-        python {SCRIPT_DIR}/extract_insertion_end.py \
+        python {input.extract_insertion_end_script} \
             -b {input.brna} \
             -s {input.others} \
             -o {WK_DIR}/input \
@@ -57,6 +66,11 @@ rule extract_insertion_end:
 
 
 rule genbank_to_fasta:
+    """
+    Creates a fasta file of all contigs contained in the provided sequence files
+    (specifically, this includes all files referenced in the config as 
+    "brna_plasmid" or "others")
+    """
     input:
         rules.extract_insertion_end.output.end_file,
         brna=BRNA_PLASMID_PATH,
@@ -71,31 +85,35 @@ rule genbank_to_fasta:
         """
 
 rule filter_read_quality:
+    """
+    Filter out reads with average read quality below QUALITY_FILTER, and trim
+    low-quality base calls from the end of all reads. Defaults to using a 
+    quality filter of 0. 
+    """
     input:
         fastq=FASTQ_PATH
     output:
         reads_quality_filtered=f"{WK_DIR}/reads_quality_filtered.fastq",
-        # low_quality_reads=f"{WK_DIR}/reads_low_quality.fastq"
     conda:
         MAP_ENV
     shell:
         """
         cutadapt -q {QUALITY_FILTER},{QUALITY_FILTER} {input.fastq} | seqkit seq -Q {QUALITY_FILTER} -o {output.reads_quality_filtered}
         """
-        # # Extract low quality reads too for record-keeping # NOTE: doesn't work currently...
-        # seqkit seq -n {output.reads_quality_filtered} > high_quality_ids.tmp
-        # seqkit grep -v -f high_quality_ids.tmp {input.fastq} > {output.low_quality_reads}
-        # rm high_quality_ids.tmp
-
 
 rule cutadapt_extract_insertions:
+    """
+    Use cutadapt to search for reads containing the insertion end, and trim off
+    the segments of those reads with the insertion sequence to enable mapping
+    later. 
+    """
     input:
         rules.genbank_to_fasta.output.fasta,
         end_file = rules.extract_insertion_end.output.end_file,
         fastq = rules.filter_read_quality.output.reads_quality_filtered
     output:
         reads_with_insertion = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads_any.fasta",
-        reads_no_insertion = f"{WK_DIR}/reads_no_insertion.fasta",
+        reads_no_insertion = f"{WK_DIR}/reads_no_insertion.fasta", # TODO: delete me?
         reads_too_short = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads_below_{MIN_TRIMMED_READ_LENGTH}nt.fasta"
     conda:
         MAP_ENV
@@ -123,7 +141,6 @@ rule cutadapt_trim_2:
         end_file = rules.extract_insertion_end.output.end_file
     output:
         trimmed_1_insert=f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads.fasta",
-        # full_reads_with_1_insertion = f"{WK_DIR}/{INSERTION_END_TO_EXTRACT}E_contain_reads.full_reads.fasta",
     conda:
         MAP_ENV
     params:
@@ -139,40 +156,62 @@ rule cutadapt_trim_2:
             -{params.end_option} file:{input.end_file} \
             {input.trimmed} > {output.trimmed_1_insert}
         """
-        # # Get the full reads corresponding to the trimmed reads with insertions (for record-keeping)
-        # seqkit seq -n {output.trimmed_1_insert} | sed 's/ rc$//' > trimmed_ids.tmp
-        # seqkit grep -f trimmed_ids.tmp {FASTQ_PATH} -o {output.full_reads_with_1_insertion}
-        # # rm trimmed_ids.tmp
 
 
 rule map_insertions:
+    """
+    Workhorse rule that maps all reads determined to contain the desired 
+    insertion sequence against provided files. By default, this accomplishes 
+    this by mapping insertion end-containing reads against the output of the
+    genbank_to_fasta rule (a.k.a. all sequences provided under the 
+    "brna_plasmid" or "other" in the config). If you've provided a fasta_16s
+    file in the config, this will first map reads against that file, and then 
+    separately map unmapped and mapped reads against the genbank_to_fasta 
+    output.
+    """
     input:
-        rules.cutadapt_trim_2.output.trimmed_1_insert,
-        sequences=rules.genbank_to_fasta.output.fasta,
-        reads=rules.cutadapt_extract_insertions.output.reads_with_insertion
+        sequences_map_to=rules.genbank_to_fasta.output.fasta,
+        reads=rules.cutadapt_trim_2.output.trimmed_1_insert,
+        # Scripts used for 16S option
+        map_16s_script=f"{SCRIPT_DIR}/map_16S.sh",
+        summarize_16S_mapping_script=f"{SCRIPT_DIR}/summarize_16S_mapping.py"
     output:
-        bam=f"{WK_DIR}/aligned_contigs.bam",
-        bai=f"{WK_DIR}/aligned_contigs.bam.bai"
+        mapping_complete=f"{WK_DIR}/.mapping_complete"
     conda:
         MAP_ENV
     threads: 48
-    shell:
-        """
-        minimap2 -t {threads} -ax map-ont {input.sequences} {input.reads} |
-        samtools view -bS |
-        samtools sort -o {output.bam} -
-        samtools index {output.bam}
-        """
+    run:
+        # If 16S file provided, perform map reads to 16S first and map non-16S reads to genomes/plasmids
+        if FASTA_16S:
+            print("Mapping to 16S sequences as well as genomes")
+            shell(f"""
+                {input.map_16s_script} {input.reads} {FASTA_16S} {input.sequences_map_to}
+                python {input.summarize_16S_mapping_script} {WK_DIR}
+                """)
+        # If no 16S file provided, just map all the reads onto the collection of genomes
+        else:
+            print("Mapping reads to genomes/plasmids only")
+            shell(f"""
+                minimap2 -t {threads} -ax map-ont {input.sequences_map_to} {input.reads} |
+                samtools view -bS |
+                samtools sort -o {WK_DIR}/aligned_contigs.bam -
+                samtools index {WK_DIR}/aligned_contigs.bam
+            """)
+        shell(f"""
+            touch {output.mapping_complete}
+        """)
 
 
 rule optional_compute_coverage:
+    """
+    Computes coverage across all provided genomes/plasmids by manually mapping 
+    all reads against them. Only runs if compute_coverage is True in the config.
+    """
     input:
-        rules.map_insertions.output.bam,
         genome=rules.genbank_to_fasta.output.fasta,
         reads=FASTQ_PATH
     output:
         cov_complete=f"{WK_DIR}/.coverage_complete"
-    
     conda:
         MAP_ENV
     threads: 48
@@ -198,57 +237,68 @@ rule optional_compute_coverage:
 
 
 rule make_plots:
+    """
+    Makes plots and a tsv summarizing mapping positions obtained by the 
+    map_insertions rule. 
+
+    NOTE: If mapping insertions was done in the 16S mode, the output files only
+    reflect the reads that didn't map to 16S (a.k.a. off-targets). Otherwise,
+    results reflect the mapping locations of ALL reads containing the insertion 
+    end. 
+    """
     input:
+        # Make sure we've mapped either to 16S or all genomes at once, and gone through the coverage step
         rules.optional_compute_coverage.output.cov_complete,
-        target=rules.extract_insertion_end.output.target_sites_file,
-        bam=rules.map_insertions.output.bam
+        rules.map_insertions.output.mapping_complete,
+        target_sites_file=rules.extract_insertion_end.output.target_sites_file,
+        # Plotting script
+        plotting_script=f"{SCRIPT_DIR}/visualize_insertions.py"
     output:
         plots_complete=f"{WK_DIR}/plots/.plots_complete"
     conda:
         MAP_ENV
     run:
+        # Figure out which read file to use for plotting
+        if FASTA_16S:
+            mapped_reads = "mapping_16s/non_16S_mapped_to_genomes.bam"
+            finish_message = (
+                f"Mapping results represent mapping reads that are unmapped "
+                f"to {FASTA_16S} to the provided genomes/plasmids."
+            )
+        else:
+            mapped_reads = "aligned_contigs.bam"
+            finish_message = (
+                f"Mapping results represent mapping all "
+                f"{INSERTION_END_TO_EXTRACT}E-containing reads "
+                f"to the provided genomes/plasmids."
+            )
+        # Run the script with or without coverage plot
         if COMPUTE_COVERAGE:
             shell(f"""
-                python {SCRIPT_DIR}/visualize_insertions.py {WK_DIR} \
-                    -t {input.target} \
+                python {input.plotting_script} {WK_DIR} -m {mapped_reads}\
+                    -t {input.target_sites_file} --end {INSERTION_END_TO_EXTRACT} \
                     --plot_coverage
-                touch {output.plots_complete}
             """)
         else:
             shell(f"""
-                python {SCRIPT_DIR}/visualize_insertions.py {WK_DIR} \
-                    -t {input.target}
-                touch {output.plots_complete}
+                python {input.plotting_script} {WK_DIR} -m {mapped_reads}\
+                    -t {input.target_sites_file} --end {INSERTION_END_TO_EXTRACT} 
             """)
+        # Write completion file
+        with open(output.plots_complete, "w") as f:
+            f.write(finish_message + "\n")
 
 
-rule map_16s_vs_genomes:
+rule summarize_results:
+    """
+    Counts reads in all fastqs/fastas in the working directory
+    """    
     input:
-        rules.optional_compute_coverage.output.cov_complete,
-        reads=rules.cutadapt_trim_2.output.trimmed_1_insert,
-        genomes=rules.genbank_to_fasta.output.fasta,
-
+        rules.make_plots.output.plots_complete
     output:
-        mapping_complete=f"{WK_DIR}/mapping_16s/.16S_mapping_complete"
-    conda:
-        MAP_ENV
-    threads: 48
+        read_counts=os.path.join(WK_DIR, "read_counts.txt")
     run:
-        if FASTA_16S:
-            print("Mapping to 16S sequences as well as genomes")
-            shell(f"""
-                {SCRIPT_DIR}/map_16S.sh {input.reads} {FASTA_16S} {input.genomes}
-                python {SCRIPT_DIR}/summarize_16S_mapping.py {WK_DIR}
-                touch {output.mapping_complete}
-                """)
-        else:
-            shell(f"touch {output.mapping_complete}")
         # Make a summary of fasta sizes
-        from Bio import SeqIO
-        import glob
-        import sys
-        import gzip
-
         def open_maybe_gzip(path, mode="rt"):
             return gzip.open(path, mode) if path.endswith(".gz") else open(path, mode)
 
@@ -265,7 +315,7 @@ rule map_16s_vs_genomes:
         ]
         fastq_files.append(FASTQ_PATH)
         # fasta_files = glob.glob(f"{WK_DIR}/**/*.fasta", recursive=True)
-        with open(os.path.join(WK_DIR, "read_counts.txt"), "w") as summary_file:
+        with open(output.read_counts, "w") as summary_file:
             for file in fasta_files:
                 with open_maybe_gzip(file, "rt") as handle:
                     # Count sequences in the file
@@ -278,10 +328,18 @@ rule map_16s_vs_genomes:
                     count = sum([1 for _ in SeqIO.parse(handle, "fastq")])
                 # print(f"{file}: {count} sequences", file=summary_file)
                 print(f"{os.path.basename(file)}: {count} sequences", file=summary_file)
-    # shell:
-    #     """
-    #     minimap2 -t {threads} -ax map-ont {input.sequences} {input.out} |
-    #     samtools view -bS |
-    #     samtools sort -o {output.bam} -
-    #     samtools index {output.bam}
-    #     """
+
+
+rule TEMP_16S_blastn:
+    input:
+        rules.map_insertions.output.mapping_complete
+    output:
+        qc_done=f"{WK_DIR}/.blastn_complete"
+    run:
+        if FASTA_16S:
+            shell(f"""
+            mkdir -p {WK_DIR}/qc
+            makeblastdb -in {WK_DIR}/mapping_16s/16S_map.unmapped.fasta -dbtype nucl -out {WK_DIR}/qc/unmapped_16S
+            blastn -db {WK_DIR}/qc/unmapped_16S -query {FASTA_16S} -out {WK_DIR}/qc/blastn.txt -outfmt 7
+            """)
+        shell(f"touch {output.qc_done}")
