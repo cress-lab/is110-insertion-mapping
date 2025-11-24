@@ -1,6 +1,8 @@
 data
 misc
 sequences/reads
+sequences/genomes/split_16S
+backups
 sequences/db_16s
 sequences/README.docx
 .snakemake
