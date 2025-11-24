@@ -33,6 +33,21 @@ def parse_args():
         'workdir',
         help='Working directory containing BAM files and analysis results'
     )
+
+    parser.add_argument(
+        '--mapping_file', "-m",
+        default="aligned_contigs.bam",
+        help='Path to BAM file with mapped reads relative to working directory'
+    )
+
+    parser.add_argument(
+        '--end', "-e",
+        default="R",
+        choices=["R", "L"],
+        help='Which end of the insertion was used to find insertion-containing' \
+        'reads. If R, positions of insertions will be the 5\' ends of reads; ' \
+        'if L, will use the 3\' end.'
+    )
     
     parser.add_argument(
         '--target', '-t',
@@ -43,7 +58,8 @@ def parse_args():
     
     parser.add_argument(
         '--reference', '-r',
-        help='Reference genome name (required when target is a single integer)'
+        help='Reference genome contig name within sequences file (required when ' \
+        'target is a single integer)'
     )
 
     parser.add_argument(
@@ -137,9 +153,9 @@ def plot_triangle(target_coordinate, ax):
     ax.add_patch(triangle)
 
 
-def parse_bam(wk_dir, title=""):
-    alignment_file = os.path.join(wk_dir, "aligned_contigs.bam")
-    assert os.path.exists(alignment_file), "Working dir must contain aligned_contigs.bam!"
+def parse_bam_for_plots(wk_dir, bam_file, end="R", title=""):
+    alignment_file = os.path.join(wk_dir, bam_file)
+    assert os.path.exists(alignment_file), f"{alignment_file} not found!"
     # Set default title if not provided
     if not title:
         title = f"Insertion map for {alignment_file}"
@@ -185,9 +201,13 @@ def parse_bam(wk_dir, title=""):
             if read.is_supplementary:
                 filter_counts["supplementary"] += 1
                 continue
-
-            # For reads that pass the filters, get the 5' end position.
-            pos = read.reference_end - 1 if read.is_reverse else read.reference_start
+            
+            # For reads that pass the filters, get the 5' end position if using 
+            # RE to find insertions, otherwise get 3'.
+            if end == "R":
+                pos = read.reference_end - 1 if read.is_reverse else read.reference_start
+            elif end == "L":
+                pos = read.reference_start if read.is_reverse else read.reference_end - 1
             insertion_sites.append(pos)
             reference_names.append(read.reference_name)
 
@@ -253,7 +273,8 @@ def main():
     
     if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir, exist_ok=True)
-    counts_df, positions_df, total_genome_lengths, title = parse_bam(args.workdir)
+    counts_df, positions_df, total_genome_lengths, title = parse_bam_for_plots(
+        args.workdir, args.mapping_file, args.end)
     # Handle target info
     targets = None
     reference_genome_name = args.reference
@@ -295,7 +316,7 @@ def main():
         plot_coverage(args)
     # Save the counts dataframe
     counts_df.to_csv(
-        os.path.join(args.out_dir, "insertion_counts_per_position.tsv"), 
+        os.path.join(args.out_dir, "mapped_reads_per_position.tsv"), 
         sep="\t", 
         index=False
         )
