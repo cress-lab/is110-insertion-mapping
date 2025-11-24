@@ -12,14 +12,16 @@ outdir=$(dirname "$seqs_to_map")/mapping_16s
 mkdir -p "$outdir"
 
 mapped_to_16s_bam="$outdir/16S_map.bam"
+mapped_to_16s_fasta="$outdir/$(basename "$mapped_to_16s_bam" .bam).fasta"
 unmapped_to_16s_bam="$outdir/16S_map.unmapped.bam"
 unmapped_to_16s_fasta="$outdir/$(basename "$unmapped_to_16s_bam" .bam).fasta"
+reads_16s_mapped_to_genomes_bam="$outdir/16S_mapped_to_genomes.bam"
 mapped_to_genomes_bam="$outdir/non_16S_mapped_to_genomes.bam"
 unmapped_to_genomes_bam="$outdir/non_16S_mapped_to_genomes.unmapped.bam"
 # mapped_to_genomes_fasta=$(basename "$mapped_to_genomes_bam" .bam).fasta
 
 # Do the mapping
-minimap2 -t 80 -ax map-ont $seqs_16s_fasta $seqs_to_map |
+minimap2 -t 80 -ax sr -N 10000 $seqs_16s_fasta $seqs_to_map |
 samtools view -bS |
 samtools sort -o $mapped_to_16s_bam -
 samtools index $mapped_to_16s_bam
@@ -28,11 +30,11 @@ samtools index $mapped_to_16s_bam
 # 256 → secondary
 # 2048 → supplementary
 # 4 + 256 + 2048 = 2308
-samtools fastq -F 2308 $mapped_to_16s_bam | seqtk seq -A > "$outdir/$(basename "$mapped_to_16s_bam" .bam).fasta"
+samtools fastq -F 2308 $mapped_to_16s_bam | seqtk seq -A > $mapped_to_16s_fasta
 # Extract the unmapped reads to a fasta file
 samtools view -b -f 4 $mapped_to_16s_bam > $unmapped_to_16s_bam
 samtools fastq $unmapped_to_16s_bam | seqtk seq -A > $unmapped_to_16s_fasta
-# Now, I’ll map these reads back to the genomes:
+# Now, I’ll map these unmapped reads back to the genomes:
 minimap2 -t 80 -ax map-ont $genomes_fasta $unmapped_to_16s_fasta |
 samtools view -bS |
 samtools sort -o $mapped_to_genomes_bam -
@@ -42,3 +44,8 @@ samtools fastq -F 2308 $mapped_to_genomes_bam | seqtk seq -A > "$outdir/$(basena
 # Save the reads not mapped to genomes or 16S to a fasta file
 samtools view -b -f 4 $mapped_to_genomes_bam > $unmapped_to_genomes_bam
 samtools fastq $unmapped_to_genomes_bam | seqtk seq -A > "$outdir/$(basename "$unmapped_to_genomes_bam" .bam).fasta"
+# Finally, let's map the reads with 16S to the genome
+minimap2 -t 80 -ax map-ont $genomes_fasta $mapped_to_16s_fasta |
+samtools view -bS |
+samtools sort -o $reads_16s_mapped_to_genomes_bam -
+samtools index $reads_16s_mapped_to_genomes_bam
