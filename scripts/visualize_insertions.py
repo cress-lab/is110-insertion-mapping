@@ -172,7 +172,7 @@ def parse_bam_for_plots(wk_dir, bam_file, end="R", title=""):
         "secondary": 0,
         "supplementary": 0,
     })
-    insertion_sites, reference_names = [], []
+    insertion_sites, reference_names, read_names = [], [], []
     # total_genome_length = 0
 
     # Open the SAM/BAM file once to process reads and get header info.
@@ -180,9 +180,9 @@ def parse_bam_for_plots(wk_dir, bam_file, end="R", title=""):
         # Get total genome length from the SAM/BAM header.
         if samfile.header.lengths:
             total_genome_lengths = dict(zip(samfile.header.references, samfile.header.lengths))
-            print(f"Total genome lengths from header:")
-            for genome, length in total_genome_lengths.items():
-                print(f"\t{genome}: {length:,} bp")
+            # print(f"Total genome lengths from header:")
+            # for genome, length in total_genome_lengths.items():
+            #     print(f"\t{genome}: {length:,} bp")
 
         # Process all aligned reads in the file.
         for read in samfile.fetch(until_eof=True):
@@ -210,6 +210,7 @@ def parse_bam_for_plots(wk_dir, bam_file, end="R", title=""):
                 pos = read.reference_start if read.is_reverse else read.reference_end - 1
             insertion_sites.append(pos)
             reference_names.append(read.reference_name)
+            read_names.append(read.query_name)
 
     # Report the filtering statistics.
     total_reads = sum(filter_counts.values()) + len(insertion_sites)
@@ -222,7 +223,12 @@ def parse_bam_for_plots(wk_dir, bam_file, end="R", title=""):
     # --- Step 4: Data Aggregation and Formatting ---
     print("\nStep 4: Aggregating data...")
 
-    positions_df = pd.DataFrame([insertion_sites, reference_names], index=['position', 'reference']).T
+    positions_df = pd.DataFrame(
+        [insertion_sites, reference_names, read_names], 
+        index=['position', 'reference', "read"]).T
+    positions_df = pd.DataFrame(
+        [read_names, reference_names, insertion_sites], 
+        index=['read', 'reference', 'position']).T
 
     # Convert to 1-based indexing
     positions_df["position"] += 1
@@ -314,9 +320,14 @@ def main():
         # plt.show()
     if args.plot_coverage:
         plot_coverage(args)
-    # Save the counts dataframe
+    # Save the counts and positions dataframes
     counts_df.to_csv(
         os.path.join(args.out_dir, "mapped_reads_per_position.tsv"), 
+        sep="\t", 
+        index=False
+        )
+    positions_df.to_csv(
+        os.path.join(args.out_dir, "positions_per_read.tsv"), 
         sep="\t", 
         index=False
         )
