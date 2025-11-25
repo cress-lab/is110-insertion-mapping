@@ -13,5 +13,7 @@ dependencies:
   - python=3.12.11
   - seaborn=0.13.2
   - samtools=1.22.1
+  - blast=2.17.0
+  - snakemake=9.3.4
   - pip:
       - bridgernadesigner==0.0.1
