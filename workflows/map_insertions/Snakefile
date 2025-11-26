@@ -1,5 +1,16 @@
 """
 Workflow for mapping insertions against the genome. Developed with snakemake 9.3
+
+wk_dir: 
+fastq_path: 
+others: 
+brna_plasmid: 
+insert_end_length: 
+insertion_end_to_extract: 
+min_trimmed_read_length: 
+quality_filter: 
+fasta_16s: 
+
 """
 import os
 from Bio import SeqIO
@@ -35,7 +46,7 @@ rule all:
     input:
         f"{WK_DIR}/plots/.plots_complete",
         os.path.join(WK_DIR, "read_counts.txt"),
-        f"{WK_DIR}/.blastn_complete", # NOTE: TEMPORARY BLASTN SANITY CHECK
+        # f"{WK_DIR}/.blastn_complete", # NOTE: TEMPORARY BLASTN SANITY CHECK
 
 
 rule extract_insertion_end:
@@ -174,7 +185,7 @@ rule map_insertions:
         reads=rules.cutadapt_trim_2.output.trimmed_1_insert,
         # Scripts used for 16S option
         map_16s_script=f"{SCRIPT_DIR}/map_16S.sh",
-        summarize_16S_mapping_script=f"{SCRIPT_DIR}/summarize_16S_mapping.py"
+        map_16s_helper_script=f"{SCRIPT_DIR}/process_16s_blastn.py",
     output:
         mapping_complete=f"{WK_DIR}/.mapping_complete"
     conda:
@@ -186,7 +197,6 @@ rule map_insertions:
             print("Mapping to 16S sequences as well as genomes")
             shell(f"""
                 {input.map_16s_script} {input.reads} {FASTA_16S} {input.sequences_map_to}
-                python {input.summarize_16S_mapping_script} {WK_DIR}
                 """)
         # If no 16S file provided, just map all the reads onto the collection of genomes
         else:
@@ -284,6 +294,18 @@ rule make_plots:
                 python {input.plotting_script} {WK_DIR} -m {mapped_reads}\
                     -t {input.target_sites_file} --end {INSERTION_END_TO_EXTRACT} 
             """)
+        # Rename all files in the output directory for clarity
+        if FASTA_16S:
+            shell(r"""
+                for f in {WK_DIR}/plots; do
+                    for file in "$f"/*.*; do
+                        base=$(basename "$file")
+                        name="${{base%.*}}"
+                        ext="${{base##*.}}"
+                        mv "$file" "$f/${{name}}.offtarget.${{ext}}"
+                    done
+                done
+            """)
         # Write completion file
         with open(output.plots_complete, "w") as f:
             f.write(finish_message + "\n")
@@ -330,16 +352,16 @@ rule summarize_results:
                 print(f"{os.path.basename(file)}: {count} sequences", file=summary_file)
 
 
-rule TEMP_16S_blastn:
-    input:
-        rules.map_insertions.output.mapping_complete
-    output:
-        qc_done=f"{WK_DIR}/.blastn_complete"
-    run:
-        if FASTA_16S:
-            shell(f"""
-            mkdir -p {WK_DIR}/qc
-            makeblastdb -in {WK_DIR}/mapping_16s/16S_map.unmapped.fasta -dbtype nucl -out {WK_DIR}/qc/unmapped_16S
-            blastn -db {WK_DIR}/qc/unmapped_16S -query {FASTA_16S} -out {WK_DIR}/qc/blastn.txt -outfmt 7
-            """)
-        shell(f"touch {output.qc_done}")
+# rule TEMP_16S_blastn:
+#     input:
+#         rules.map_insertions.output.mapping_complete
+#     output:
+#         qc_done=f"{WK_DIR}/.blastn_complete"
+#     run:
+#         if FASTA_16S:
+#             shell(f"""
+#             mkdir -p {WK_DIR}/qc
+#             makeblastdb -in {WK_DIR}/mapping_16s/reads_no_16S_blastn_hit.fasta -dbtype nucl -out {WK_DIR}/qc/unmapped_16S
+#             blastn -db {WK_DIR}/qc/unmapped_16S -query {FASTA_16S} -out {WK_DIR}/qc/blastn.txt -outfmt 7
+#             """)
+#         shell(f"touch {output.qc_done}")
