@@ -261,6 +261,7 @@ rule make_plots:
         rules.optional_compute_coverage.output.cov_complete,
         rules.map_insertions.output.mapping_complete,
         target_sites_file=rules.extract_insertion_end.output.target_sites_file,
+        fasta=rules.genbank_to_fasta.output.fasta,
         # Plotting script
         plotting_script=f"{SCRIPT_DIR}/visualize_insertions.py"
     output:
@@ -287,12 +288,14 @@ rule make_plots:
             shell(f"""
                 python {input.plotting_script} {WK_DIR} -m {mapped_reads}\
                     -t {input.target_sites_file} --end {INSERTION_END_TO_EXTRACT} \
+                    --fasta {input.fasta} \
                     --plot_coverage
             """)
         else:
             shell(f"""
                 python {input.plotting_script} {WK_DIR} -m {mapped_reads}\
-                    -t {input.target_sites_file} --end {INSERTION_END_TO_EXTRACT} 
+                    -t {input.target_sites_file} --end {INSERTION_END_TO_EXTRACT} \
+                    --fasta {input.fasta}
             """)
         # Rename all files in the output directory for clarity
         if FASTA_16S:
