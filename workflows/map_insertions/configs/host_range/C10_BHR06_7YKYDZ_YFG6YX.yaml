@@ -1,0 +1,9 @@
+wk_dir: ../../data/smk/host_range/C10_BHR06_7YKYDZ_YFG6YX
+compute_coverage: True
+insertion_end_to_extract: 'L'
+quality_filter: 20
+insert_end_length: 200
+fastq_path: ../../sequences/reads/host_range/C10_BHR06_7YKYDZ_YFG6YX.combined.fastq.gz
+others: ../../sequences/genomes/Burkholderia_phytofirmans_PsJN.gb
+brna_plasmid: '../../sequences/plasmids/pJRP1063.gbk'
+fasta_16s: "../../sequences/genomes/16S/Burkholderia_phytofirmans_PsJN.16S.fna"

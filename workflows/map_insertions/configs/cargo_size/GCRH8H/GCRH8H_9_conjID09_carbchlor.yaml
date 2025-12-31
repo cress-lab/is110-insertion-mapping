@@ -4,5 +4,5 @@ others: ['../../sequences/genomes/gSES0128.gbk', '../../sequences/bacs/pSES0126.
 brna_plasmid: '../../sequences/plasmids/pSES0099.gbk'
 compute_coverage: True
 insertion_end_to_extract: 'R'
-# quality_filter: 20
+quality_filter: 20
 insert_end_length: 200

@@ -1,0 +1,9 @@
+wk_dir: ../../data/smk/host_range/C26_BHR06_7YKYDZ
+compute_coverage: True
+insertion_end_to_extract: 'L'
+quality_filter: 20
+insert_end_length: 200
+fastq_path: ../../sequences/reads/host_range/7YKYDZ_5_BHR06-C26-rep1.fastq.gz
+others: ../../sequences/genomes/Pontibacter_actiniarum.gb
+brna_plasmid: ../../sequences/plasmids/pJRP1155_ggJRP0647_AOB_InSilico.gbk
+fasta_16s: "../../sequences/genomes/16S/Pontibacter_actiniarum.16S.fna"

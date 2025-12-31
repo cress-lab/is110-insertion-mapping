@@ -1,0 +1,9 @@
+wk_dir: ../../data/smk/host_range/C30_BHR06_7YKYDZ_YFG6YX
+compute_coverage: True
+insertion_end_to_extract: 'L'
+quality_filter: 20
+insert_end_length: 200
+fastq_path: ../../sequences/reads/host_range/C30_BHR06_7YKYDZ_YFG6YX.combined.fastq.gz
+others: ../../sequences/genomes/Bacteroides_ovatus_ATCC_8483.gb
+brna_plasmid: ../../sequences/plasmids/pJRP1155_ggJRP0647_AOB_InSilico.gbk
+fasta_16s: "../../sequences/genomes/16S/Bacteroides_ovatus_ATCC_8483.16S.fna"

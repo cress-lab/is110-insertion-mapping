@@ -1,0 +1,22 @@
+# wk_dir: "../../data/smk/B73T5L_1_SH1-gDNA15"
+# fastq_path: "../../sequences/reads/community_ap_pcr/B73T5L_1_SH1-gDNA15.fastq"
+# others: "../../sequences/genomes/SH1_comm/SH1.gbk"
+# brna_plasmid: ["../../sequences/plasmids/pJRP1063.gbk", "../../sequences/plasmids/pJRP1155_ggJRP0647_AOB_InSilico.gbk"]
+# insert_end_length: 28
+# insertion_end_to_extract: "L"
+# min_trimmed_read_length: 50
+# quality_filter: 20
+# fasta_16s: "../../sequences/genomes/SH1_comm/SH1_16S.fna"
+
+
+
+wk_dir: ../../data/smk/host_range/HPWXSZ_1_BHR06-C2-rep1-arbPCR
+# compute_coverage: True
+insertion_end_to_extract: 'L'
+quality_filter: 20
+insert_end_length: 28
+min_trimmed_read_length: 50
+fastq_path: ../../sequences/reads/host_range/HPWXSZ_1_BHR06-C2-rep1-arbPCR.fastq
+others: '../../sequences/genomes/Escherichia_coli_MG1655.gb'
+brna_plasmid: '../../sequences/plasmids/pJRP1063.gbk'
+fasta_16s: "../../sequences/genomes/16S/Escherichia_coli_MG1655.16S.fna"

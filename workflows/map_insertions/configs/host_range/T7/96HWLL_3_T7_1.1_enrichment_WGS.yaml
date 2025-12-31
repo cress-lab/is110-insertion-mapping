@@ -1,0 +1,8 @@
+fastq_path: ../../sequences/reads/host_range/96HWLL/96HWLL_3_T7_1.1_enrichment_WGS.fastq.gz
+wk_dir: ../../data/smk/host_range/T7/96HWLL_3_T7_1.1_enrichment_WGS
+others: ['../../sequences/plasmids/pBFC1744.gbk', '../../sequences/genomes/T7.gbk']
+brna_plasmid: ../../sequences/plasmids/pJRP1205.gbk
+compute_coverage: True
+insertion_end_to_extract: 'L'
+quality_filter: 20
+insert_end_length: 200
