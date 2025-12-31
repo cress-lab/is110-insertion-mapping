@@ -1,0 +1,114 @@
+LOCUS       pBFC1744_(R6K_ca        1590 bp    DNA     circular SYN 05-DEC-2025
+DEFINITION  .
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  recombinant plasmid
+REFERENCE   1  (bases 1 to 1590)
+  AUTHORS   Brady Cress
+  TITLE     Direct Submission
+  JOURNAL   Exported Dec 5, 2025 from SnapGene 8.1.1
+            https://www.snapgene.com
+FEATURES             Location/Qualifiers
+     source          1..1590
+                     /mol_type="other DNA"
+                     /organism="recombinant plasmid"
+     CDS             1..330
+                     /codon_start=1
+                     /gene="trxA"
+                     /product="E. coli thioredoxin"
+                     /label=TrxA
+                     /note="color: #cc99b2"
+                     /translation="MSDKIIHLTDDSFDTDVLKADGAILVDFWAEWCGPCKMIAPILDE
+                     IADEYQGKLTVAKLNIDQNPGTAPKYGIRGIPTLLLFKNGEVAATKVGALSKGQLKEFL
+                     DANLA"
+     promoter        331..435
+                     /label=CamR Promoter
+                     /note="color: #ffffff; direction: RIGHT"
+     CDS             436..1095
+                     /label=CamR
+                     /note="color: #993366; direction: RIGHT"
+     misc_feature    1101..1519
+                     /label=From pHLL250 template)
+                     /note="color: #000000"
+     primer_bind     1101..1145
+                     /label=oBFC3711_fixed
+                     /note="color: black; sequence: 
+                     GGCCGGTCTCTagacCCGGCCACGATGCGTCCGGCGTAGAGGATCTGAAGATCAGC; 
+                     added: 2025-05-19"
+     primer_bind     1102..1145
+                     /label=oBFC3711
+                     /note="color: black; sequence: 
+                     GGCCGGTCTCTgacCCGGCCACGATGCGTCCGGCGTAGAGGATCTGAAGATCAGC; 
+                     added: 2025-05-19"
+     misc_feature    join(1105..1130,1131..1519)
+                     /label=R6K origin of replication_pJW20
+                     /note="gamma replication origin from E. coli plasmid R6K; 
+                     requires the R6K initiator protein pi for replication"
+                     /note="This feature has 2 segments:
+                        1: 1105 .. 1130 / #00ff00 / annotated on pHLL250
+                        2: 1131 .. 1519 / #ffff00 / actual R6K"
+     primer_bind     complement(1500..1523)
+                     /label=oBFC3712
+                     /note="color: black; sequence: 
+                     GGCCGGTCTCACCCATGTCAGCCGTTAAGTGTTCC; added: 2025-05-19"
+     misc_feature    1524..1545
+                     /label=Donor A
+                     /note="color: #a6acb3"
+     misc_feature    join(1524..1533,1534..1535,1536..1545)
+                     /label=attP?!?!?
+                     /note="This feature has 3 segments:
+                        1: 1524 .. 1533 / #ff9900 / Non-Coding End
+                        2: 1534 .. 1535 / #008000 / Core Sequence
+                        3: 1536 .. 1545 / #ff9900 / Non-Coding End"
+     misc_feature    1524..1533
+                     /label=RE
+                     /note="color: #a6acb3"
+     misc_feature    join(1527..1537,1539..1540)
+                     /label=bound by bridgeRNA
+                     /note="This feature has 2 segments:
+                        1: 1527 .. 1537 / #a6acb3
+                        2: 1539 .. 1540 / #a6acb3"
+     misc_feature    1527..1534
+                     /label=LDG
+                     /note="color: #ff9900; direction: RIGHT"
+     misc_feature    1536..1545
+                     /label=LE
+                     /note="color: #a6acb3"
+     promoter        1546..1564
+                     /label=T7 promoter
+                     /note="promoter for bacteriophage T7 RNA polymerase"
+                     /note="color: #ffffff; direction: RIGHT"
+     misc_feature    1565..1582
+                     /label=Phage T7 trailer sequence
+                     /note="color: #ff9900; direction: RIGHT"
+ORIGIN
+        1 atgagcgata aaattattca cctgactgac gacagttttg acacggatgt actcaaagcg
+       61 gacggggcga tcctcgtcga tttctgggca gagtggtgcg gtccgtgcaa aatgatcgcc
+      121 ccgattctgg atgaaatcgc tgacgaatat cagggcaaac tgaccgttgc aaaactgaac
+      181 atcgatcaaa accctggcac tgcgccgaaa tatggcatcc gtggtatccc gactctgctg
+      241 ctgttcaaaa acggtgaagt ggcggcaacc aaagtgggtg cactgtctaa aggtcagttg
+      301 aaagagttcc tcgacgctaa cctggcgtaa ttgatcgggc acgtaagagg ttccaacttt
+      361 caccataatg aaataagatc actaccgggc gtattttttg agttatcgag attttcagga
+      421 gctaaggaag ctaaaatgga gaaaaaaatc actggatata ccaccgttga tatatcccaa
+      481 tggcatcgta aagaacattt tgaggcattt cagtcagttg ctcaatgtac ctataaccag
+      541 accgttcagc tggatattac ggccttttta aagaccgtaa agaaaaataa gcacaagttt
+      601 tatccggcct ttattcacat tcttgcccgc ctgatgaatg ctcatccgga atttcgtatg
+      661 gcaatgaaag acggtgagct ggtgatatgg gatagtgttc acccttgtta caccgttttc
+      721 catgagcaaa ctgaaacgtt ttcatcgctc tggagtgaat accacgacga tttccggcag
+      781 tttctacaca tatattcgca agatgtggcg tgttacggtg aaaacctggc ctatttccct
+      841 aaagggttta ttgagaatat gtttttcgtt tcagccaatc cctgggtgag tttcaccagt
+      901 tttgatttaa acgtggccaa tatggacaac ttcttcgccc ccgttttcac catgggcaaa
+      961 tattatacgc aaggcgacaa ggtgctgatg ccgctggcga ttcaggttca tcatgccgtt
+     1021 tgtgatggct tccatgtcgg cagaatgctt aatgaattac aacagtactg cgatgagtgg
+     1081 cagggcgggg cgtaactgtc agacccggcc acgatgcgtc cggcgtagag gatctgaaga
+     1141 tcagcagttc aacctgttga tagtacgtac taagctctca tgtttcacgt actaagctct
+     1201 catgtttaac gtactaagct ctcatgttta acgaactaaa ccctcatggc taacgtacta
+     1261 agctctcatg gctaacgtac taagctctca tgtttcacgt actaagctct catgtttgaa
+     1321 caataaaatt aatataaatc agcaacttaa atagcctcta aggttttaag ttttataaga
+     1381 aaaaaaagaa tatataaggc ttttaaagct tttaaggttt aacggttgtg gacaacaagc
+     1441 cagggatgta acgcactgag aagcccttag agcctctcaa agcaattttg agtgacacag
+     1501 gaacacttaa cggctgacat gggataacag tatcttgtat tatcctaata cgactcacta
+     1561 taggttaact ttaagaagga gatatacatg
+//

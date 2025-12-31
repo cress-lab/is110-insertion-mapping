@@ -1,7 +1,0 @@
-# fastq_path: ../../sequences/reads/BBQPLY_1_Sample_5.fastq
-wk_dir: ../../data/community_editing/H3_WGS
-
-brna_plasmid_file: ../../sequences/plasmids/pJRP1063.gbk
-script_dir: ../../scripts
-min_length: 400
-max_length: 600

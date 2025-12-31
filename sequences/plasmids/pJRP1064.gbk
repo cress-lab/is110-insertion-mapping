@@ -1,0 +1,554 @@
+LOCUS       pJRP1064_pLtetO_        7300 bp    DNA     circular SYN 12-AUG-2025
+DEFINITION  .
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 7300)
+  AUTHORS   Cress Lab
+  TITLE     Direct Submission
+  JOURNAL   Exported Nov 26, 2025 from SnapGene 8.1.1
+            https://www.snapgene.com
+FEATURES             Location/Qualifiers
+     source          1..7300
+                     /mol_type="other DNA"
+                     /organism="synthetic DNA construct"
+     misc_feature    1..4
+                     /label=5 > 1 OH
+                     /note="color: #a6acb3"
+     CDS             2..982
+                     /codon_start=1
+                     /label=IS110-like element IS621 family transposase
+                     /note="color: #993366"
+                     /translation="MEHELHYIGIDTAKEKLDVDVLRPDGRHRTKKFANTTKGHDELVS
+                     WLKGHKIDHAHICIEATGTYMEPVAECLYDAGYIVSVINPALGKAFAQSEGLRNKTDTV
+                     DARMLAEFCRQKRPAAWEAPHPLERALRALVVRHQALTDMHTQELNRTETAREVQRPSI
+                     DAHLLWLEAELKRLEKQIKDLTDDDPDMKHRRKLLESIPGIGEKTSAVLLAYIGLKDRF
+                     AHARQFAAFAGLTPRRYESGSSVRGASRMSKAGHVSLRRALYMPAMVATSKTEWGRAFR
+                     DRLAANGKKGKVILGAMMRKLAQVAYGVLKSGVPFDASRHNPVAA"
+     CDS             32..34
+                     /label=D
+                     /note="color: #993366; direction: RIGHT"
+     CDS             179..181
+                     /label=E
+                     /note="color: #993366; direction: RIGHT"
+     misc_feature    223..243
+                     /label=cas12 binding site 1
+                     /note="color: #a6acb3"
+     CDS             305..307
+                     /label=D
+                     /note="color: #993366; direction: RIGHT"
+     CDS             314..316
+                     /label=D
+                     /note="color: #993366; direction: RIGHT"
+     CDS             722..724
+                     /label=S
+                     /note="color: #993366; direction: RIGHT"
+     terminator      983..1016
+                     /label=BBa_B1002 terminator
+                     /note="color: #ffffff; direction: RIGHT"
+     promoter        1021..1055
+                     /label=J23119 promoter
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=promoter"
+                     /note="color: #ffffff; direction: RIGHT"
+     misc_feature    1056..1100
+                     /label=Bridge RNA
+                     /note="color: #cc99ff; direction: RIGHT"
+     misc_feature    1056..1100
+                     /label=fixed sequence
+                     /note="color: #000000"
+     misc_feature    1223..1232
+                     /label=Bridge RNA
+                     /note="color: #cc99ff; direction: RIGHT"
+     misc_feature    1223..1232
+                     /label=Fixed Sequence
+                     /note="color: #000000"
+     misc_feature    1233..1322
+                     /label=HDV Ribozyme
+                     /note="color: #a6acb3"
+     ncRNA           1234..1323
+                     /label=HDV ribozyme
+                     /note="pLannotate"
+                     /note="/database=Rfam"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=98.9"
+                     /note="/other=ncRNA"
+                     /note="color: #8fbc8f; direction: RIGHT"
+     misc_feature    1319..1360
+                     /label=Stuffer to include additional guides
+                     /note="color: #a6acb3"
+     terminator      1364..1398
+                     /label=BBa_B1001 bidirectional terminator
+                     /note="color: #a6acb3"
+     misc_feature    1417..1420
+                     /label=3 > 6 OH
+                     /note="color: #a6acb3"
+     misc_feature    1421..1440
+                     /label=T7 promoter
+                     /note="color: #cc66ff"
+     protein_bind    1445..1478
+                     /label=lox66
+                     /bound_moiety="Cre recombinase"
+                     /note="Right element (RE) mutant of loxP (Araki et al., 
+                     2010). Cre-mediated recombination occurs in the 8-bp core 
+                     sequence (ATGTATGC) (Shaw et al., 2021)."
+                     /note="color: #31849b; direction: RIGHT"
+     terminator      1479..1510
+                     /label=Term 1 from doi.org/10.1021/acssynbio.1c00050
+                     /note="color: #ffffff; direction: RIGHT"
+     terminator      1536..1569
+                     /label=Term 4 from doi.org/10.1021/acssynbio.1c00050
+                     /note="color: #ffffff; direction: RIGHT"
+     misc_feature    1570..1572
+                     /label=Barcode OH
+                     /note="color: #ffcc00"
+     misc_feature    join(1598..1607,1608,1609,1610..1619)
+                     /label=attP?!?!?
+                     /note="This feature has 4 segments:
+                        1: 1598 .. 1607 / #ff9900 / Non-Coding End
+                        2: 1608 .. 1608 / #ff9900
+                        3: 1609 .. 1609 / #008000 / Core Sequence
+                        4: 1610 .. 1619 / #ff9900 / Non-Coding End"
+     misc_feature    1598..1619
+                     /label=Donor A
+                     /note="color: #a6acb3"
+     misc_feature    1598..1607
+                     /label=attP?!?!?
+                     /note="color: #ff9900"
+     misc_feature    1598..1607
+                     /label=Donor A
+                     /note="color: #a6acb3"
+     misc_feature    1598..1607
+                     /label=RE
+                     /note="color: #a6acb3"
+     misc_feature    1598..1607
+                     /label=RE
+                     /note="color: #a6acb3"
+     misc_feature    join(1601..1611,1613..1614)
+                     /label=bound by bridgeRNA
+                     /note="This feature has 2 segments:
+                        1: 1601 .. 1611 / #a6acb3
+                        2: 1613 .. 1614 / #a6acb3"
+     misc_feature    1601..1607
+                     /label=bound by bridgeRNA
+                     /note="color: #a6acb3"
+     misc_feature    1601..1607
+                     /label=LDG
+                     /note="color: #ff9900; direction: RIGHT"
+     misc_feature    1601..1607
+                     /label=LDG
+                     /note="color: #ff9900; direction: RIGHT"
+     misc_feature    1610..1619
+                     /label=LE
+                     /note="color: #a6acb3"
+     misc_feature    1620..1637
+                     /label=I-SceI
+                     /note="color: #a6acb3"
+     misc_feature    1636..1637
+                     /label=Stuffer to include additional guides
+                     /note="color: #a6acb3"
+     misc_feature    1636
+                     /label=HDV Ribozyme
+                     /note="color: #a6acb3"
+     promoter        1645..1831
+                     
+                     /note="color: #ffffff; direction: RIGHT"
+     RBS             1832..1847
+                     /note="color: #a6acb3; direction: RIGHT"
+     misc_feature    1848..1851
+                     /label=2>3
+                     /note="color: #0000ff"
+     CDS             1850..2470
+                     /codon_start=1
+                     /gene="catP"
+                     /label=catP
+                     /note="color: #993366"
+                     /translation="MVFEKIDKNSWNRKEYFDHYFASVPCTYSMTVKVDITQIKEKGMK
+                     LYPAMLYYIAMIVNRHSEFRTAINQDGELGIYDEMIPSYTIFHNDTETFSSLWTECKSD
+                     FKSFLADYESDTQRYGNNHRMEGKPNAPENIFNVSMIPWSTFDGFNLNLQKGYDYLIPI
+                     FTMGKYYKEDNKIILPLAIQVHHAVCDGFHICRFVNELQELINS"
+     misc_feature    1902..1922
+                     /label=cas12 binding site 2
+                     /note="color: #a6acb3"
+     CDS             2471..2500
+                     /codon_start=1
+                     /label=serine glycine linker
+                     /note="color: #a6acb3"
+                     /translation="GGGGSGGGGS"
+     CDS             2501..3214
+                     /codon_start=1
+                     /label=sfGFP
+                     /note="ApEinfo_revcolor=green
+                     ApEinfo_fwdcolor=#00f700
+                     ApEinfo_graphicformat=arrow_data {{0 1 2 0 0 -1} {} 0} 
+                     width 5 offset 0"
+                     /note="color: #00f700"
+                     /translation="MSKGEELFTGVVPILVELDGDVNGHKFSVRGEGEGDATNGKLTLK
+                     FICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKRHDFFKSAMPEGYVQERTISFKDDG
+                     TYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNFNSHNVYITADKQKNGIKA
+                     NFKIRHNVEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSVLSKDPNEKRDHMVLLE
+                     FVTAAGITHGMDELYK"
+     promoter        3268..3364
+                     /label=pKan from pACYC177
+                     /note="color: #00ffff; direction: RIGHT"
+     misc_feature    3365..3452
+                     /label=Ppmtl-catp
+                     /note="from ""Genetic manipulation of gut microbes enables 
+                     single-gene interrogation in a complex microbiome""
+                     
+                     original sequence: 
+                     ""cggccagtgggcaagttgaaaaattcacaaaaatgtggtataatatctttgttcatt
+                     agagcgataaacttgaatttgagagggaacttag""
+                     
+                     but i removed the final AG to maintain spacing between RBS 
+                     and ATG that starts in 2>3 overhang
+                     "
+                     /note="color: #ffffff; direction: RIGHT"
+     CDS             3454..4242
+                     /codon_start=1
+                     /gene="aadA"
+                     /product="aminoglycoside adenylyltransferase (Murphy, 
+                     1985)"
+                     /label=SmR (aadA)
+                     /note="confers resistance to spectinomycin and 
+                     streptomycin"
+                     /note="color: #ff6600"
+                     /translation="MREAVIAEVSTQLSEVVGVIERHLEPTLLAVHLYGSAVDGGLKPH
+                     SDIDLLVTVTVRLDETTRRALINDLLETSASPGESEILRAVEVTIVVHDDIIPWRYPAK
+                     RELQFGEWQRNDILAGIFEPATIDIDLAILLTKAREHSVALVGPAAEELFDPVPEQDLF
+                     EALNETLTLWNSPPDWAGDERNVVLTLSRIWYSAVTGKIAPKDVAADWAMERLPAQYQP
+                     VILEARQAYLGQEEDRLASRADQLEEFVHYVKGEITKVVGK"
+     misc_feature    4246..4249
+                     /label=3 -> 6 overhang
+                     /note="color: #a6acb3"
+     misc_feature    4275..6178
+                     /label=PCR667
+                     /note="color: #a6acb3"
+     misc_feature    4275..4278
+                     /label=6>4 OH
+                     /note="color: #0000ff"
+     misc_feature    complement(4279..4282)
+                     /label=SMRT Gate OH Right
+                     /note="color: #ff6600; direction: LEFT"
+     misc_feature    complement(4287..4293)
+                     /label=AarI
+                     /note="color: #cc99ff; direction: LEFT"
+     misc_feature    4294..4314
+                     /label=oBFC1459 decoy primer
+                     /note="color: #800000; direction: RIGHT"
+     misc_feature    4315..4322
+                     /label=AsiSI
+                     /note="color: #ff00ff; direction: BOTH"
+     misc_feature    4316..4319
+                     /label=BsmBI_OH
+                     /note="color: #a6acb3"
+     misc_feature    4323..4337
+                     /label=UNS spacer
+                     /note="color: #ffff99"
+     misc_feature    4338..4345
+                     /label=SbfI
+                     /note="color: #ff00ff; direction: BOTH"
+     misc_feature    4346..6178
+                     /label=From pHLL250 template)
+                     /note="color: #000000"
+     oriT            complement(4357..4466)
+                     /direction=LEFT
+                     /label=oriT (direction indicates 5' end leading transfer)
+                     /note="incP origin of transfer
+                     
+                     directionality deduced by BFC from plasmid R751 and 
+                     ""Complete Nucleotide Sequence of Birmingham IncPa 
+                     plasmids"" paper"
+                     /note="color: #a6acb3"
+     misc_feature    4358..4583
+                     /label=oriT
+                     /note="color: #ff00ff"
+     misc_feature    4584..4601
+                     /label=oriT
+                     /label=oriT(1)
+                     /note="color: #ff00ff"
+     promoter        4659..4763
+                     /gene="bla"
+                     /label=AmpR promoter
+                     /note="color: #ffffff; direction: RIGHT"
+     -35_signal      4694..4699
+                     /label=bla promoter (counter-clockwise)
+                     /label=bla promoter (counter-clockwise); TTCAAA
+                     /note="bla promoter (counter-clockwise); TTCAAA"
+                     /note="color: #ffc0cb"
+     -10_signal      4715..4720
+                     /label=bla promoter (counter-clockwise)
+                     /label=bla promoter (counter-clockwise); GAGACA
+                     /note="bla promoter (counter-clockwise); GAGACA"
+                     /note="color: #ffc0cb"
+     gene            4764..5624
+                     /gene="bla"
+                     /label=bla
+                     /note="color: #ffc0cb; direction: RIGHT"
+     CDS             4764..5624
+                     /codon_start=1
+                     /gene="bla"
+                     /product="beta-lactamase"
+                     /label=beta-lactamase
+                     /note="ampR (confers resistance to ampicillin)"
+                     /note="color: #ffc0cb"
+                     /translation="MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYI
+                     ELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYS
+                     PVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRW
+                     EPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSA
+                     LPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGAS
+                     LIKHW"
+     misc_feature    5477..5480
+                     /label=BsaI_OH
+                     /note="color: #a6acb3"
+     misc_feature    5480
+                     /label=G-->C silent mut removes BsaI
+                     /note="color: #ff0000"
+     misc_feature    join(5634..5659,5660..6048,6049..6052)
+                     /label=R6K origin of replication_pJW20
+                     /note="gamma replication origin from E. coli plasmid R6K; 
+                     requires the R6K initiator protein pi for replication"
+                     /note="This feature has 3 segments:
+                        1: 5634 .. 5659 / #00ff00 / annotated on pHLL250
+                        2: 5660 .. 6048 / #ffff00 / actual R6K
+                        3: 6049 .. 6052 / #00ff00 / annotated on pHLL250"
+     misc_feature    6179..6185
+                     /label=AarI
+                     /note="color: #cc99ff; direction: RIGHT"
+     misc_feature    6190..6193
+                     /label=SMRT Gate OH Left
+                     /note="color: #ff6600; direction: RIGHT"
+     misc_feature    6194..6197
+                     /label=4>5 OH
+                     /note="color: #a6acb3"
+     misc_feature    6198..7269
+                     /label=PTet* Promoter Part
+                     /note="color: #99ccff; direction: RIGHT"
+     CDS             complement(6205..6828)
+                     /codon_start=1
+                     /label=TetR
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=False"
+                     /note="/identity=100.0"
+                     /note="/match_length=100.0"
+                     /note="/other=CDS"
+                     /note="color: #993366"
+                     /translation="MSRLDKSKVINSALELLNEVGIEGLTTRKLAQKLGVEQPTLYWHV
+                     KNKRALLDALAIEMLDRHHTHFCPLEGESWQDFLRNNAKSFRCALLSHRDGAKVHLGTR
+                     PTEKQYETLENQLAFLCQQGFSLENALYALSAVGHFTLGCVLEDQEHQVAKEERETPTT
+                     DSMPPLLRQAIELFDHQGAEPAFLFGLELIICGLEKQLKCESGS"
+     misc_feature    6829..6910
+                     /label=harvested from upstream TetR
+                     /note="color: #00ffff"
+     promoter        6829..6902
+                     /label=lacI promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=94.9"
+                     /note="/other=promoter"
+                     /note="color: #ffffff"
+     misc_feature    complement(6829..6856)
+                     /label=RBS tet1
+                     /note="color: #00ff00; direction: LEFT"
+     misc_feature    complement(6857..6910)
+                     /label=TetR Prom
+                     /note="color: #00ff00; direction: LEFT"
+     misc_feature    6920..7174
+                     /label=Term IOT
+                     /note="color: #ffffff; direction: RIGHT"
+     promoter        7012..7030
+                     /label=tet promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=65.5"
+                     /note="/other=promoter"
+                     /note="color: #ffffff"
+     CDS             7040..7160
+                     /codon_start=1
+                     /label=TcR (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=10.2"
+                     /note="/other=CDS"
+                     /note="color: #993366"
+                     /translation="DPLRRTHRGRHHRRHRCGCWRLYRRHHRWGRSGSPLRAHE"
+     misc_feature    7194..7269
+                     /label=PTet* Prom
+                     /note="color: #00ff00; direction: RIGHT"
+     promoter        7197..7215
+                     /label=PLtetO-1 promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=25.7"
+                     /note="/other=promoter"
+                     /note="color: #ffffff; direction: RIGHT"
+     promoter        7216..7269
+                     /label=PLtetO-1 promoter (fragment)
+                     /note="pLannotate"
+                     /note="/database=snapgene"
+                     /note="/fragment=True"
+                     /note="/identity=100.0"
+                     /note="/match_length=73.0"
+                     /note="/other=promoter"
+                     /note="color: #ffffff; direction: RIGHT"
+     protein_bind    7216..7234
+                     /gene="tetO"
+                     /label=tet operator
+                     /bound_moiety="tetracycline repressor TetR"
+                     /note="bacterial operator O2 for the tetR and tetA genes"
+                     /note="color: #31849b"
+     misc_feature    7235..7240
+                     /label=-35
+                     /note="color: #a6acb3"
+     protein_bind    7241..7259
+                     /gene="tetO"
+                     /label=tet operator
+                     /bound_moiety="tetracycline repressor TetR"
+                     /note="bacterial operator O2 for the tetR and tetA genes"
+                     /note="color: #31849b"
+     misc_feature    7258..7263
+                     /label=-10
+                     /note="color: #a6acb3"
+     RBS             7282..7299
+                     /label=RBS
+                     /note="color: #75c6a9"
+ORIGIN
+        1 aatggaacat gaacttcatt atatcggtat cgacaccgct aaagagaaac tggatgtcga
+       61 tgtgttgcgt cctgatggtc gtcatcgcac caaaaaattc gctaacacca ctaaagggca
+      121 cgatgagctg gtgagctggc tgaaaggtca caagattgac catgcgcata tctgcatcga
+      181 agcgaccggc acctatatgg aacctgtcgc tgagtgcctt tacgatgctg gctacatagt
+      241 gtcagtcatt aatcctgcgc tgggtaaagc tttcgctcag agtgaaggac tgcgtaacaa
+      301 gactgatacc gtggatgcgc gcatgctggc agagttctgt cgtcagaagc gccctgcagc
+      361 ctgggaagcg cctcacccgc ttgaacgcgc gttgcgtgcc ctggtagtcc gccaccaggc
+      421 gctgacagat atgcacacgc aggaactgaa tcgcactgaa acggcgcggg aagtccaaag
+      481 accgagcatt gatgctcacc ttctgtggct tgaagcagag ctgaagcgtc ttgagaagca
+      541 gataaaagac ctgacagacg atgatccgga tatgaaacac cgcaggaaac tgctggaaag
+      601 catcccgggt atcggagaga aaacatctgc ggtattgctg gcttatatcg gtctgaagga
+      661 ccgcttcgcc catgccagac agttcgccgc ttttgcgggt ctgacaccac ggcgttatga
+      721 atcaggtagc agtgtgagag gggcgagccg gatgagtaag gccggacatg tgtcgcttcg
+      781 cagggcgttg tatatgcccg caatggtagc caccagtaag actgagtggg gacgggcgtt
+      841 ccgcgaccgt ctggcggcta atggcaagaa aggaaaggtg attctcggcg cgatgatgcg
+      901 caagctggca caggtggcgt atggagtgct gaagtcaggc gtgccgttcg atgcgtcacg
+      961 gcataatccg gtagcggcgt aacgcaaaaa accccgcttc ggcggggttt tttcgcggac
+     1021 ttgacagcta gctcagtcct aggtataatg ctagcagtgc agagaaaatc ggccagtttt
+     1081 ctctgcctgc agtccgcatg ccgtagccgc ggttgggttc taacctgtgt attacattta
+     1141 tgcagcggac tgcctttctc ccaaagtgat aaaccggaca gtatgatgga ccggttttcc
+     1201 cggtaatccg tatttacaac cgtggtttca ctatggccgg catggtccca gcctcctcgc
+     1261 tggcgccggc tgggcaacat tccgagggga ccgtcctcct cggtaatggc gaatgggacc
+     1321 catgagacga gtctacattg gtatatgaac gtctcaaggt cccaaaaaaa aaaccccgct
+     1381 tcggcggggt ttttttttcg acgtcttaag acccacgctg taatacgact cactataggg
+     1441 gatataccgt tcgtataatg tatgctatac gaagttataa aaacgcgagc gcctgacgct
+     1501 cgcgtttttt cgtgatgtcg gttccttcaa aggttaaaaa gctcgctatt ggttatggcg
+     1561 agcttttttc agtcgggtat ggcagtgagt acgccttata acagtatgtt gtattatcct
+     1621 agggataaca gggtaattca gacgacgtca aattctatca taattgtggt ttcaaaatcg
+     1681 gctccgtcga tactatgtta tacgccaact ttgaaaacaa ctttgaaaag gctgttttct
+     1741 gtatttaagg ttttagaatg caaggaacag tgaattggag ttcgtcttgt tataattagc
+     1801 ttcttggggt atctttaaat actgtagaaa aaaagaggag aaaggattga tggtatttga
+     1861 aaaaattgat aaaaatagtt ggaacagaaa agagtatttt gaccactact ttgcaagtgt
+     1921 accttgtacc tacagcatga ccgttaaagt ggatatcaca caaataaagg aaaagggaat
+     1981 gaaactatat cctgcaatgc tttattatat tgcaatgatt gtaaaccgcc attcagagtt
+     2041 taggacggca atcaatcaag atggtgaatt ggggatatat gatgagatga taccaagcta
+     2101 tacaatattt cacaatgata ctgaaacatt ttccagcctt tggactgagt gtaagtctga
+     2161 ctttaaatca tttttagcag attatgaaag tgatacgcaa cggtatggaa acaatcatag
+     2221 aatggaagga aagccaaatg ctccggaaaa catttttaat gtatctatga taccgtggtc
+     2281 aaccttcgat ggctttaatc tgaatttgca gaaaggatat gattatttga ttcctatttt
+     2341 tactatgggg aaatattata aagaagataa caaaattata cttcctttgg caattcaagt
+     2401 tcatcacgca gtatgtgacg gatttcacat ttgccgtttt gtaaacgaat tgcaggaatt
+     2461 gataaatagt ggcggaggtg gctccggagg cggcggttca atgagcaaag gagaagaact
+     2521 tttcactgga gttgtcccaa ttcttgttga attagatggt gatgttaatg ggcacaaatt
+     2581 ttctgtccgt ggagagggtg aaggtgatgc tacaaacgga aaactcaccc ttaaatttat
+     2641 ttgcactact ggaaaactac ctgttccgtg gccaacactt gtcactactc tgacctatgg
+     2701 tgttcaatgc ttttcccgtt atccggatca catgaaacgg catgactttt tcaagagtgc
+     2761 catgcccgaa ggttatgtac aggaacgcac tatatctttc aaagatgacg ggacctacaa
+     2821 gacgcgtgct gaagtcaagt ttgaaggtga tacccttgtt aatcgtatcg agttaaaggg
+     2881 tattgatttt aaagaagatg gaaacattct tggacacaaa ctcgagtaca actttaactc
+     2941 acacaatgta tacatcacgg cagacaaaca aaagaatgga atcaaagcta acttcaaaat
+     3001 tcgccacaac gttgaagatg gttccgttca actagcagac cattatcaac aaaatactcc
+     3061 aattggcgat ggccctgtcc ttttaccaga caaccattac ctgtcgacac aatctgtcct
+     3121 ttcgaaagat cccaacgaaa agcgtgacca catggtcctt cttgagtttg taactgctgc
+     3181 tgggattaca catggcatgg atgagctcta caaaggtggt ggcgggtcag gaggtggtgg
+     3241 atcataagtc cgacctggtt cctggcgatt taaatttgtg tctcaaaatc tctgatgtta
+     3301 cattgcacaa gataaaaata tatcatcatg aacaataaaa ctgtctgctt acataaacag
+     3361 taatcggcca gtgggcaagt tgaaaaattc acaaaaatgt ggtataatat ctttgttcat
+     3421 tagagcgata aacttgaatt tgagagggaa cttatgaggg aagcggtgat cgccgaagta
+     3481 tcgactcaac tatcagaggt agttggcgtc atcgagcgcc atctcgaacc gacgttgctg
+     3541 gccgtacatt tgtacggctc cgcagtggat ggcggcctga agccacacag tgatattgat
+     3601 ttgctggtta cggtgaccgt aaggcttgat gaaacaacgc ggcgagcttt gatcaacgac
+     3661 cttttggaaa cttcggcttc ccctggagag agcgagattc tccgcgctgt agaagtcacc
+     3721 attgttgtgc acgacgacat cattccgtgg cgttatccag ctaagcgcga actgcaattt
+     3781 ggagaatggc agcgcaatga cattcttgca ggtatcttcg agccagccac gatcgacatt
+     3841 gatctggcta tcttgctgac aaaagcaaga gaacatagcg ttgccttggt aggtccagcg
+     3901 gcggaggaac tctttgatcc ggttcctgaa caggatctat ttgaggcgct aaatgaaacc
+     3961 ttaacgctat ggaactcgcc gcccgactgg gctggcgatg agcgaaatgt agtgcttacg
+     4021 ttgtcccgca tttggtacag cgcagtaacc ggcaaaatcg cgccgaagga tgtcgctgcc
+     4081 gactgggcaa tggagcgcct gccggcccag tatcagcccg tcatacttga agctagacag
+     4141 gcttatcttg gacaagaaga agatcgcttg gcctcgcgcg cagatcagtt ggaagaattt
+     4201 gtccactacg tgaaaggcga gatcaccaag gtagtcggca aataagctgt ggtagagcca
+     4261 caaacagccg gtacaggagg actttggcag gtgcagcaca aaaggaaact caccgcgatc
+     4321 gccattactc gcatcagcct gcaggattct tgcttatcgg ccagcctcgc agagcaggat
+     4381 tcccgttgag caccgccagg tgcgaataag ggacagtgaa gaaggaacac ccgctcgcgg
+     4441 gtgggcctac ttcacctatc ctgcccggct gacgccgttg gatacaccaa ggaaagtcta
+     4501 cacgaaccct ttggcaaaat cctgtatatc gtgcgaaaaa ggatggatat accgaaaaaa
+     4561 tcgctataat gaccccgaag cagggttatg cagcggaaaa gaatgtcatg ataataatgg
+     4621 tttcttagac gtcaggtggc acttttcggg gaaatgtgcg cggaacccct atttgtttat
+     4681 ttttctaaat acattcaaat atgtatccgc tcatgagaca ataaccctga taaatgcttc
+     4741 aataatattg aaaaaggaag agtatgagta ttcaacattt ccgtgtcgcc cttattccct
+     4801 tttttgcggc attttgcctt cctgtttttg ctcacccaga aacgctggtg aaagtaaaag
+     4861 atgctgaaga tcagttgggt gcacgagtgg gttacatcga actggatctc aacagcggta
+     4921 agatccttga gagttttcgc cccgaagaac gttttccaat gatgagcact tttaaagttc
+     4981 tgctatgtgg cgcggtatta tcccgtattg acgccgggca agagcaactc ggtcgccgca
+     5041 tacactattc tcagaatgac ttggttgagt actcaccagt cacagaaaag catcttacgg
+     5101 atggcatgac agtaagagaa ttatgcagtg ctgccataac catgagtgat aacactgcgg
+     5161 ccaacttact tctgacaacg atcggaggac cgaaggagct aaccgctttt ttgcacaaca
+     5221 tgggggatca tgtaactcgc cttgatcgtt gggaaccgga gctgaatgaa gccataccaa
+     5281 acgacgagcg tgacaccacg atgcctgtag caatggcaac aacgttgcgc aaactattaa
+     5341 ctggcgaact acttactcta gcttcccggc aacaattaat agactggatg gaggcggata
+     5401 aagttgcagg accacttctg cgctcggccc ttccggctgg ctggtttatt gctgataaat
+     5461 ctggagccgg tgagcgtggc tctcgcggta tcattgcagc actggggcca gatggtaagc
+     5521 cctcccgtat cgtagttatc tacacgacgg ggagtcaggc aactatggat gaacgaaata
+     5581 gacagatcgc tgagataggt gcctcactga ttaagcattg gtaactgtca gacccggcca
+     5641 cgatgcgtcc ggcgtagagg atctgaagat cagcagttca acctgttgat agtacgtact
+     5701 aagctctcat gtttcacgta ctaagctctc atgtttaacg tactaagctc tcatgtttaa
+     5761 cgaactaaac cctcatggct aacgtactaa gctctcatgg ctaacgtact aagctctcat
+     5821 gtttcacgta ctaagctctc atgtttgaac aataaaatta atataaatca gcaacttaaa
+     5881 tagcctctaa ggttttaagt tttataagaa aaaaaagaat atataaggct tttaaagctt
+     5941 ttaaggttta acggttgtgg acaacaagcc agggatgtaa cgcactgaga agcccttaga
+     6001 gcctctcaaa gcaattttga gtgacacagg aacacttaac ggctgacatg ggcaagttta
+     6061 ctcatatata ctttagattg atttaaaact tcatttttaa tttaaaagga tctaggtgaa
+     6121 gatccttttt gataatctca tgaccaaaat cccttaacgt gagttttcgt tccactgaca
+     6181 cctgcccgaa ccatatccga cgtcttaaga cccactttca catttaagtt gtttttctaa
+     6241 tccgcatatg atcaattcaa ggccgaataa gaaggctggc tctgcacctt ggtgatcaaa
+     6301 taattcgata gcttgtcgta ataatggcgg catactatca gtagtaggtg tttccctttc
+     6361 ttctttagcg acttgatgct cttgatcttc caatacgcaa cctaaagtaa aatgccccac
+     6421 agcgctgagt gcatataatg cattctctag tgaaaaacct tgttggcata aaaaggctaa
+     6481 ttgattttcg agagtttcat actgtttttc tgtaggccgt gtacctaaat gtacttttgc
+     6541 tccatcgcga tgacttagta aagcacatct aaaactttta gcgttattac gtaaaaaatc
+     6601 ttgccagctt tccccttcta aagggcaaaa gtgagtatgg tgcctatcta acatctcaat
+     6661 ggctaaggcg tcgagcaaag cccgcttatt ttttacatgc caatacaatg taggctgctc
+     6721 tacacctagc ttctgggcga gtttacgggt tgttaaacct tcgattccga cctcattaag
+     6781 cagctctaat gcgctgttaa tcactttact tttatctaat ctagacatat tcaccaccct
+     6841 gaattgactc tcttccgggc gctatcatgc cataccgcga aaggttttgc gccattcgat
+     6901 ggcgcgccgc taaggatcct aattggtaac gaatcagaca attgacggct cgagggagta
+     6961 gcatagggtt tgcagaatcc ctgcttcgtc catttgacag gcacattatg catcgatgat
+     7021 aagctgtcaa acatgagcag atcctctacg ccggacgcat cgtggccggc atcaccggcg
+     7081 ccacaggtgc ggttgctggc gcctatatcg ccgacatcac cgatggggaa gatcgggctc
+     7141 gccacttcgg gctcatgagc aaatatttta tctggcttaa cgatcgttgg ctgttttcag
+     7201 caggacgcac tgacctccct atcagtgata gagattgaca tccctatcag tgatagagat
+     7261 actgagcact actagagaaa gtttaagaag gagatatact
+//
