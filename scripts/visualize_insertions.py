@@ -7,6 +7,8 @@ import seaborn as sns
 import argparse
 import os
 from collections import Counter
+from Bio import SeqIO
+from Bio.Seq import reverse_complement
 
 
 def parse_args():
@@ -66,6 +68,19 @@ def parse_args():
         '--plot_coverage', 
         action='store_true', default=False,
         help='Option to make coverage plots. Defaults to false. '
+    )
+
+    parser.add_argument(
+        '--fasta', 
+        default=False, required=False,
+        help='Path to fasta containing contigs used for mapping. If provided, ' \
+        'counts_df will contain the sequences at each mapping position'
+    )
+
+    parser.add_argument(
+        '--tseqlen', 
+        default=10, type=int, 
+        help='Length of target sequence to extract around insertion site.'
     )
     
     args = parser.parse_args()
@@ -133,6 +148,7 @@ def plot_insertions(counts_df, total_genome_length, mode="mb", ax=None,):
         ax.set_xlim(left=0)
     return fig, ax
 
+
 def plot_triangle(target_coordinate, ax):
     # Plot a red triangle at the target site
     x_range = ax.get_xlim()[1] - ax.get_xlim()[0]
@@ -172,7 +188,7 @@ def parse_bam_for_plots(wk_dir, bam_file, end="R", title=""):
         "secondary": 0,
         "supplementary": 0,
     })
-    insertion_sites, reference_names, read_names = [], [], []
+    insertion_sites, reference_names, read_names, strands = [], [], [], []
     # total_genome_length = 0
 
     # Open the SAM/BAM file once to process reads and get header info.
@@ -208,6 +224,8 @@ def parse_bam_for_plots(wk_dir, bam_file, end="R", title=""):
                 pos = read.reference_end - 1 if read.is_reverse else read.reference_start
             elif end == "L":
                 pos = read.reference_start if read.is_reverse else read.reference_end - 1
+            strand = "-" if read.is_reverse else "+"
+            strands.append(strand)
             insertion_sites.append(pos)
             reference_names.append(read.reference_name)
             read_names.append(read.query_name)
@@ -223,18 +241,19 @@ def parse_bam_for_plots(wk_dir, bam_file, end="R", title=""):
     # --- Step 4: Data Aggregation and Formatting ---
     print("\nStep 4: Aggregating data...")
 
+    # positions_df = pd.DataFrame(
+    #     [insertion_sites, reference_names, read_names], 
+    #     index=['position', 'reference', "read"]).T
     positions_df = pd.DataFrame(
-        [insertion_sites, reference_names, read_names], 
-        index=['position', 'reference', "read"]).T
-    positions_df = pd.DataFrame(
-        [read_names, reference_names, insertion_sites], 
-        index=['read', 'reference', 'position']).T
+        [read_names, reference_names, insertion_sites, strands], 
+        index=['read', 'reference', 'position', 'strand']).T
 
     # Convert to 1-based indexing
     positions_df["position"] += 1
 
     # Convert the results into a DataFrame for plotting.
-    counts_df = pd.DataFrame(positions_df.groupby("reference")["position"].value_counts()).reset_index()
+    # counts_df = pd.DataFrame(positions_df.groupby("reference")["position"].value_counts()).reset_index()
+    counts_df = pd.DataFrame(positions_df.groupby("reference")[["position", "strand"]].value_counts()).reset_index()
 
     # Add a column for plotting in Megabases (Mb).
     counts_df['position_mb'] = counts_df['position'] / 1_000_000
@@ -270,7 +289,6 @@ def plot_coverage(args):
         # --- Layout adjustment ---
         plt.tight_layout()
         fig.savefig(os.path.join(args.out_dir, f"{contig}_coverage.png"))
-
 
 
 def main():
@@ -320,6 +338,19 @@ def main():
         # plt.show()
     if args.plot_coverage:
         plot_coverage(args)
+    # Extract target sequences if a fasta file was provided
+    if args.fasta:
+        records = [r for r in SeqIO.parse(args.fasta, "fasta")]
+        target_seqs = []
+        for _, row in counts_df.iterrows():
+            for record in records:
+                if record.id == row["reference"]:
+                    tseq = str(record.seq[row["position"]-args.tseqlen:row["position"]+args.tseqlen])
+                    if row["strand"] == "-":
+                        tseq = reverse_complement(tseq)
+                    target_seqs.append(tseq)
+        counts_df["target_seq"] = target_seqs
+
     # Save the counts and positions dataframes
     counts_df.to_csv(
         os.path.join(args.out_dir, "mapped_reads_per_position.tsv"), 
