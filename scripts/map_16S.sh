@@ -27,7 +27,8 @@ blastn \
     -query "$seqs_to_map" \
     -out "$blastn_out" \
     -outfmt 7
-python "$script_dir/process_16s_blastn.py" "$outdir" "$blastn_out" "$seqs_to_map"
+# python "$script_dir/process_16s_blastn.py" "$outdir" "$blastn_out" "$seqs_to_map"
+python "$script_dir/process_16s_blastn.py" --blast_file "$blastn_out" --fasta_16s "$seqs_16s_fasta" --reads_file "$seqs_to_map"
 unmapped_to_16s_fasta="$outdir/reads_no_16S_blastn_hit.fasta"
 # Now, I’ll map these unmapped reads back to the genomes:
 minimap2 -t 80 -ax map-ont $genomes_fasta $unmapped_to_16s_fasta |
